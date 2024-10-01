@@ -1,10 +1,12 @@
 import { connectDatabase } from './config/mongoDbConect.js';
 import indexRout from './routes/indexRout.js'
 import express from 'express'
+import cors from 'cors'
 
 connectDatabase();
 
 const app = express();
+app.use(cors());
 
 app.use(express.json())
 app.use('/', indexRout);
