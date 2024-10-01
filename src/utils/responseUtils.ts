@@ -1,4 +1,4 @@
-// src/utils/responseUtils.ts
+
 
 export interface ServerResponse<T> {
     isSuccessful: boolean;

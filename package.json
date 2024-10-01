@@ -1,11 +1,11 @@
 {
   "name": "ci-server",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "build/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node dist/server.js",
-    "dev": "nodemon src/server.ts",
+    "start": "node dist/build/server.js",
+    "dev": "nodemon src/build/server.js",
     "build": "tsc"
   },
   "keywords": [],
@@ -14,15 +14,16 @@
   "description": "",
   "devDependencies": {
     "@types/dotenv": "8.2.0",
-    "@types/express": "5.0.0",
+    "@types/express": "^5.0.0",
     "@types/mongoose": "5.11.97",
     "@types/node": "22.7.4",
     "ts-node": "10.9.2",
     "typescript": "5.6.2"
   },
   "dependencies": {
+    "config": "^3.3.12",
     "dotenv": "16.4.5",
-    "express": "4.21.0",
+    "express": "^4.21.0",
     "mongodb": "6.9.0",
     "mongoose": "8.7.0"
   }

@@ -4,3 +4,4 @@ const indexRout = Router();
 
 indexRout.use('/users', userRoutes )
 export default indexRout;
+
