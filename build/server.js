@@ -6,11 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoDbConect_js_1 = require("./config/mongoDbConect.js");
 const indexRout_js_1 = __importDefault(require("./routes/indexRout.js"));
 const express_1 = __importDefault(require("express"));
-const cors = require('cors'); // Import CORS middleware
 (0, mongoDbConect_js_1.connectDatabase)();
 const app = (0, express_1.default)();
-// Enable CORS for all routes
-app.use(cors()); // Use the CORS middleware
 app.use(express_1.default.json());
 app.use('/', indexRout_js_1.default);
 const PORT = process.env.PORT || 3000;
