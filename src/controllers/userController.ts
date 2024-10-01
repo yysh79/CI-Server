@@ -1,22 +1,23 @@
 
 
 import { Request, Response } from 'express';
-import User from '../models/userModel'
+import  User from '../models/userModel'
 import { log } from 'console';
+import * as XLSX from 'xlsx';
 
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
         const users = await User.find();
-        log(users);
+        
         
         res.status(200).json(users);
     } catch (error) {
-        log(error);
-        
+       
         res.status(500).json({ message: 'Failed to fetch users', error:error });
     }
 
   };
+
   export const addUsers = async (req: Request, res: Response) => {
     try {
         // קח את המידע מהבקשה
@@ -60,5 +61,25 @@ export const getAllUsers = async (_req: Request, res: Response) => {
         }
     }
 };
+
+  export const exportToExcelAllUsers = async (_req: Request, res: Response): Promise<void> => {
+    try {
+        const users = await User.find().lean();
+        const excelSheet = XLSX.utils.json_to_sheet(users);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, excelSheet, 'Users');
+
+
+         const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+        res.setHeader('Content-Disposition', 'attachment; filename="users.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        // שליחת הקובץ ללקוח
+        res.send(excelBuffer);
+    } catch (error) {
+       
+        res.status(500).json({ message: 'Failed to export users to Excel', error });
+    }
+}
   
   
