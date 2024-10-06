@@ -3,7 +3,7 @@
 import { Request, Response } from 'express';
 import  User from '../models/userModel'
 import { log } from 'console';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
@@ -65,17 +65,30 @@ export const getAllUsers = async (_req: Request, res: Response) => {
   export const exportToExcelAllUsers = async (_req: Request, res: Response): Promise<void> => {
     try {
         const users = await User.find().lean();
-        const excelSheet = XLSX.utils.json_to_sheet(users);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, excelSheet, 'Users');
+       
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Users'); 
+       
 
+        worksheet.columns = [
+            { header: 'שם פרטי', key: 'Fname', width: 30 },
+            { header: 'שם משפחה', key: 'Lname', width: 30 },
+            { header: 'מספר טלפון', key: 'phone', width: 30 },
+            { header: 'מייל', key: 'email', width: 30 },
+            { header: 'תפקיד', key: 'role', width: 30 },
+        ];
 
-         const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+        users.forEach(user => {
+            worksheet.addRow(user); // הוספת שורה עבור כל משתמש
+        });
+
         res.setHeader('Content-Disposition', 'attachment; filename="users.xlsx"');
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        
 
-        // שליחת הקובץ ללקוח
-        res.send(excelBuffer);
+        await workbook.xlsx.write(res);
+        
+        res.end();
     } catch (error) {
        
         res.status(500).json({ message: 'Failed to export users to Excel', error });
