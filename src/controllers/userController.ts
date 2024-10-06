@@ -76,6 +76,7 @@ export const getAllUsers = async (_req: Request, res: Response) => {
             { header: 'מספר טלפון', key: 'phone', width: 30 },
             { header: 'מייל', key: 'email', width: 30 },
             { header: 'תפקיד', key: 'role', width: 30 },
+            { header: 'סיסמא', key: 'password', width: 30 },
         ];
 
         users.forEach(user => {
