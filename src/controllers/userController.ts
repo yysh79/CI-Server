@@ -70,7 +70,7 @@ export const getAllUsers = async (_req: Request, res: Response) => {
         const worksheet = workbook.addWorksheet('Users'); 
        
 
-        worksheet.columns = [
+         worksheet.columns = [
             { header: 'שם פרטי', key: 'Fname', width: 30 },
             { header: 'שם משפחה', key: 'Lname', width: 30 },
             { header: 'מספר טלפון', key: 'phone', width: 30 },
@@ -80,7 +80,14 @@ export const getAllUsers = async (_req: Request, res: Response) => {
         ];
 
         users.forEach(user => {
-            worksheet.addRow(user); // הוספת שורה עבור כל משתמש
+            worksheet.addRow({
+                Fname: user.name, // הוספת שורה עבור כל משתמש
+                Lname: user.lastName,
+                phone: user.phon,
+                email: user.email,
+                password: user.password, 
+                role: user.role,
+            });
         });
 
         res.setHeader('Content-Disposition', 'attachment; filename="users.xlsx"');
