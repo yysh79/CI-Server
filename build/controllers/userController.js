@@ -1,27 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -38,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.exportToExcelAllUsers = exports.addUsers = exports.getAllUsers = void 0;
 const userModel_1 = __importDefault(require("../models/userModel"));
 const console_1 = require("console");
-const XLSX = __importStar(require("xlsx"));
+const exceljs_1 = __importDefault(require("exceljs"));
 const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const users = yield userModel_1.default.find();
@@ -94,14 +71,22 @@ exports.addUsers = addUsers;
 const exportToExcelAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const users = yield userModel_1.default.find().lean();
-        const excelSheet = XLSX.utils.json_to_sheet(users);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, excelSheet, 'Users');
-        const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+        const workbook = new exceljs_1.default.Workbook();
+        const worksheet = workbook.addWorksheet('Users');
+        worksheet.columns = [
+            { header: 'שם פרטי', key: 'Fname', width: 30 },
+            { header: 'שם משפחה', key: 'Lname', width: 30 },
+            { header: 'מספר טלפון', key: 'phone', width: 30 },
+            { header: 'מייל', key: 'email', width: 30 },
+            { header: 'תפקיד', key: 'role', width: 30 },
+        ];
+        users.forEach(user => {
+            worksheet.addRow(user); // הוספת שורה עבור כל משתמש
+        });
         res.setHeader('Content-Disposition', 'attachment; filename="users.xlsx"');
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        // שליחת הקובץ ללקוח
-        res.send(excelBuffer);
+        yield workbook.xlsx.write(res);
+        res.end();
     }
     catch (error) {
         res.status(500).json({ message: 'Failed to export users to Excel', error });
