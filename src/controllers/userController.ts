@@ -81,9 +81,9 @@ export const getAllUsers = async (_req: Request, res: Response) => {
 
         users.forEach(user => {
             worksheet.addRow({
-                Fname: user.name, // הוספת שורה עבור כל משתמש
+                Fname: user.firstName, // הוספת שורה עבור כל משתמש
                 Lname: user.lastName,
-                phone: user.phon,
+                phone: user.phone,
                 email: user.email,
                 password: user.password, 
                 role: user.role,
