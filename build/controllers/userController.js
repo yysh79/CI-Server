@@ -79,9 +79,17 @@ const exportToExcelAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, f
             { header: 'מספר טלפון', key: 'phone', width: 30 },
             { header: 'מייל', key: 'email', width: 30 },
             { header: 'תפקיד', key: 'role', width: 30 },
+            { header: 'סיסמא', key: 'password', width: 30 },
         ];
         users.forEach(user => {
-            worksheet.addRow(user); // הוספת שורה עבור כל משתמש
+            worksheet.addRow({
+                Fname: user.firstName, // הוספת שורה עבור כל משתמש
+                Lname: user.lastName,
+                phone: user.phone,
+                email: user.email,
+                password: user.password,
+                role: user.role,
+            });
         });
         res.setHeader('Content-Disposition', 'attachment; filename="users.xlsx"');
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
