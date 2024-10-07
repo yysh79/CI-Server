@@ -21,10 +21,13 @@
     "typescript": "5.6.2"
   },
   "dependencies": {
+    "@types/swagger-ui-express": "^4.1.6",
     "config": "^3.3.12",
     "dotenv": "16.4.5",
     "express": "^4.21.0",
     "mongodb": "6.9.0",
-    "mongoose": "8.7.0"
+    "mongoose": "8.7.0",
+    "swagger-autogen": "^2.23.7",
+    "swagger-ui-express": "^5.0.1"
   }
 }
