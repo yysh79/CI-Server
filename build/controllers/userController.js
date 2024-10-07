@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.exportToExcelAllUsers = exports.addUsers = exports.getAllUsers = void 0;
+exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.getAllUsers = void 0;
 const responseUtils_1 = require("../utils/responseUtils");
 const userModel_1 = __importDefault(require("../models/userModel"));
 const console_1 = require("console");

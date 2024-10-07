@@ -17,7 +17,6 @@ export const getAllUsers = async (_req: Request, res: Response) => {
 };
 
 export const addUsers = async (req: Request, res: Response) => {
-export const addUsers = async (req: Request, res: Response) => {
     try {
         // קח את המידע מהבקשה
         const userData = req.body;
@@ -96,6 +95,7 @@ export const searchUser = async (req: Request, res: Response): Promise<void> => 
                 { email: new RegExp(search, 'i') },
             ]
         });
+        console.log(users);
         
         res.status(201).json({
             isSuccessful: true,

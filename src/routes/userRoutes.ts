@@ -34,5 +34,7 @@ userRoutes.get('/getAllUsers', getAllUsers);
  *         description: User added successfully
  */
 userRoutes.post('/addUsers', addUsers);
+userRoutes.get('/exportToExcelAllUsers', exportToExcelAllUsers);
+userRoutes.get('/search/:searchName', searchUser);
 
 export default userRoutes;
