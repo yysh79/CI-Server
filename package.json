@@ -13,7 +13,9 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/cors": "^2.8.17",
     "@types/dotenv": "8.2.0",
+    "@types/exceljs": "^0.5.3",
     "@types/express": "^5.0.0",
     "@types/mongoose": "5.11.97",
     "@types/node": "22.7.4",
@@ -23,7 +25,10 @@
   "dependencies": {
     "@types/swagger-ui-express": "^4.1.6",
     "config": "^3.3.12",
+    "cookie": "^0.7.1",
+    "cors": "^2.8.5",
     "dotenv": "16.4.5",
+    "exceljs": "^4.4.0",
     "express": "^4.21.0",
     "mongodb": "6.9.0",
     "mongoose": "8.7.0",

@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { getAllUsers, addUsers } from '../controllers/userController';
+import { getAllUsers, addUsers ,exportToExcelAllUsers} from '../controllers/userController';
 
 const userRoutes = Router();
 
