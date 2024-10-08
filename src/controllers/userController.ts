@@ -83,7 +83,7 @@ export const exportToExcelAllUsers = async (_req: Request, res: Response): Promi
 export const searchUser = async (req: Request, res: Response): Promise<void> => {
     const search = req.params.searchName as string;
 
-    if (!search) {
+    if (search.length < 20) {
         res.status(400).json({ message: 'Search query is required' });
     }
 
