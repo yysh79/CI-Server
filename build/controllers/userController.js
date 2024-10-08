@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUser = exports.exportToExcelAllUsers = exports.addUsers = exports.getAllUsers = void 0;
+exports.exportToExcelAllUsers = exports.addUsers = exports.getAllUsers = void 0;
 const responseUtils_1 = require("../utils/responseUtils");
 const userModel_1 = __importDefault(require("../models/userModel"));
 const console_1 = require("console");
@@ -97,31 +97,3 @@ const exportToExcelAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, f
     }
 });
 exports.exportToExcelAllUsers = exportToExcelAllUsers;
-const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.params.id; // קבלת ה-ID מהפרמטרים של הבקשה
-    const updatedData = req.body; // קבלת הנתונים המעודכנים מהבקשה
-    try {
-        // חפש את המשתמש לפי ה-ID
-        const user = yield userModel_1.default.findById(userId);
-        // בדוק אם המשתמש קיים
-        if (!user) {
-            res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'User not found'));
-        }
-        else {
-            const { email } = updatedData, otherUpdates = __rest(updatedData, ["email"]);
-            Object.assign(user, otherUpdates);
-            const updatedUser = yield user.save();
-            res.status(200).json((0, responseUtils_1.createServerResponse)(true, updatedUser, 'User updated successfully'));
-        }
-    }
-    catch (error) {
-        (0, console_1.log)(error);
-        if (error instanceof Error) {
-            res.status(500).json((0, responseUtils_1.createServerResponse)(false, null, 'Failed to update user', null, error.message));
-        }
-        else {
-            res.status(500).json((0, responseUtils_1.createServerResponse)(false, null, 'Failed to update user', null, 'An unknown error occurred'));
-        }
-    }
-});
-exports.updateUser = updateUser;

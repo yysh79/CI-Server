@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { getAllUsers, addUsers ,exportToExcelAllUsers ,updateUser} from '../controllers/userController';
+import { getAllUsers, addUsers, exportToExcelAllUsers ,updateUser, searchUser ,deleteUser} from '../controllers/userController';
 
 const userRoutes = Router();
 
@@ -34,7 +34,9 @@ userRoutes.get('/getAllUsers', getAllUsers);
  *         description: User added successfully
  */
 userRoutes.post('/addUsers', addUsers);
-
+userRoutes.get('/exportToExcelAllUsers', exportToExcelAllUsers);
+userRoutes.get('/search/:searchName', searchUser);
+userRoutes.delete('/deleteUser/:id', deleteUser);
 /**
  * @swagger
  * /users/updateUser/{id}:

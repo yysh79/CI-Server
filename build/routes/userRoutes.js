@@ -32,6 +32,7 @@ userRoutes.get('/getAllUsers', userController_1.getAllUsers);
  *         description: User added successfully
  */
 userRoutes.post('/addUsers', userController_1.addUsers);
+<<<<<<< HEAD
 /**
  * @swagger
  * /users/updateUser/{id}:
@@ -69,4 +70,9 @@ userRoutes.post('/addUsers', userController_1.addUsers);
  */
 userRoutes.put('/updateUser/:id', userController_1.updateUser);
 // userRoutes.put('/updateUser', updateUser);
+=======
+userRoutes.get('/exportToExcelAllUsers', userController_1.exportToExcelAllUsers);
+userRoutes.get('/search/:searchName', userController_1.searchUser);
+userRoutes.delete('/deleteUser/:id', userController_1.deleteUser);
+>>>>>>> dbf336ff833422b6303049229748e816538a3c18
 exports.default = userRoutes;
