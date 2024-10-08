@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.getAllUsers = void 0;
+exports.deleteUser = exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.getAllUsers = void 0;
 const responseUtils_1 = require("../utils/responseUtils");
 const userModel_1 = __importDefault(require("../models/userModel"));
 const console_1 = require("console");
@@ -111,3 +111,18 @@ const searchUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.searchUser = searchUser;
+const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const userId = req.params.id; // Get user ID from request parameters
+        const deletedUser = yield userModel_1.default.findByIdAndDelete(userId); // Delete user by ID
+        if (!deletedUser) {
+            res.status(404).json({ message: 'User not found' }); // User not found response
+        }
+        res.status(200).json({ message: 'User deleted successfully' }); // User deleted response
+    }
+    catch (error) {
+        console.error(error); // Log error
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+exports.deleteUser = deleteUser;
