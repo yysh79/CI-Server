@@ -75,8 +75,8 @@ export const exportToExcelAllUsers = async (_req: Request, res: Response): Promi
 
         res.end();
     } catch (error) {
-
-        res.status(500).json({ message: 'Failed to export users to Excel', error });
+    console.error(error); // Log error
+    res.status(500).json(createServerResponse(false, null,'Failed to export users to Excel', 'An error occurred while attempting to export users to Excel',error instanceof Error ? error.message : String(error)));
     }
 }
 
@@ -115,12 +115,12 @@ export const deleteUser = async (req: Request, res: Response) => {
         const deletedUser = await User.findByIdAndDelete(userId); // Delete user by ID
 
         if (!deletedUser) {
-             res.status(404).json({ message: 'User not found' }); // User not found response
+             res.status(404).json(createServerResponse( false,null,'User not found','The user with the provided ID does not exist in the database'));
         }
 
-         res.status(200).json({ message: 'User deleted successfully' }); // User deleted response
+         res.status(200).json(createServerResponse( true, deletedUser, 'User deleted successfully', 'The user was successfully deleted from the database' )); 
     } catch (error) {
         console.error(error); // Log error
-     res.status(500).json({ message: 'Internal Server Error' });
+     res.status(500).json(createServerResponse( false,null, 'Internal Server Error', 'An error occurred while attempting to delete the user', error instanceof Error ? error.message : String(error)));
     }
-};
+}
