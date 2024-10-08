@@ -27,17 +27,14 @@ const mongoose_1 = __importStar(require("mongoose"));
 const userSchema = new mongoose_1.Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
-    phone: {
-        type: String,
+    phone: { type: String,
         validate: {
             validator: function (v) {
                 return /^\d{8,12}$/.test(v);
             },
             message: (props) => `${props.value} is not a valid phone number! Phone number must be between 8 and 12 digits.`
         },
-        required: true,
-        unique: true
-    },
+        required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, required: true }

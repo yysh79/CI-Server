@@ -108,7 +108,6 @@ export const searchUser = async (req: Request, res: Response): Promise<void> => 
 
 }
 
-
 export const deleteUser = async (req: Request, res: Response) => {
     try {
         const userId = req.params.id; // Get user ID from request parameters
@@ -124,8 +123,6 @@ export const deleteUser = async (req: Request, res: Response) => {
      res.status(500).json(createServerResponse( false,null, 'Internal Server Error', 'An error occurred while attempting to delete the user', error instanceof Error ? error.message : String(error)));
     }
 }
-
-
 
 export const updateUser = async (req: Request, res: Response) => {
     const userId = req.params.id; // קבלת ה-ID מהפרמטרים של הבקשה

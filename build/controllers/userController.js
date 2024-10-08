@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.exportToExcelAllUsers = exports.addUsers = exports.getAllUsers = void 0;
+exports.updateUser = exports.deleteUser = exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.getAllUsers = void 0;
 const responseUtils_1 = require("../utils/responseUtils");
 const userModel_1 = __importDefault(require("../models/userModel"));
 const console_1 = require("console");
@@ -93,7 +93,76 @@ const exportToExcelAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, f
         res.end();
     }
     catch (error) {
-        res.status(500).json({ message: 'Failed to export users to Excel', error });
+        console.error(error); // Log error
+        res.status(500).json((0, responseUtils_1.createServerResponse)(false, null, 'Failed to export users to Excel', 'An error occurred while attempting to export users to Excel', error instanceof Error ? error.message : String(error)));
     }
 });
 exports.exportToExcelAllUsers = exportToExcelAllUsers;
+const searchUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const search = req.params.searchName;
+    if (search.length < 20) {
+        res.status(400).json({ message: 'Search query is required' });
+    }
+    try {
+        const users = yield userModel_1.default.find({
+            $or: [
+                { name: new RegExp(search, 'i') },
+                { lastName: new RegExp(search, 'i') },
+                { email: new RegExp(search, 'i') },
+            ]
+        });
+        console.log(users);
+        res.status(201).json({
+            isSuccessful: true,
+            data: users,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+exports.searchUser = searchUser;
+const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const userId = req.params.id; // Get user ID from request parameters
+        const deletedUser = yield userModel_1.default.findByIdAndDelete(userId); // Delete user by ID
+        if (!deletedUser) {
+            res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'User not found', 'The user with the provided ID does not exist in the database'));
+        }
+        res.status(200).json((0, responseUtils_1.createServerResponse)(true, deletedUser, 'User deleted successfully', 'The user was successfully deleted from the database'));
+    }
+    catch (error) {
+        console.error(error); // Log error
+        res.status(500).json((0, responseUtils_1.createServerResponse)(false, null, 'Internal Server Error', 'An error occurred while attempting to delete the user', error instanceof Error ? error.message : String(error)));
+    }
+});
+exports.deleteUser = deleteUser;
+const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.params.id; // קבלת ה-ID מהפרמטרים של הבקשה
+    const updatedData = req.body; // קבלת הנתונים המעודכנים מהבקשה
+    try {
+        // חפש את המשתמש לפי ה-ID
+        const user = yield userModel_1.default.findById(userId);
+        // בדוק אם המשתמש קיים
+        if (!user) {
+            res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'User not found'));
+        }
+        else {
+            const { email } = updatedData, otherUpdates = __rest(updatedData, ["email"]);
+            Object.assign(user, otherUpdates);
+            const updatedUser = yield user.save();
+            res.status(200).json((0, responseUtils_1.createServerResponse)(true, updatedUser, 'User updated successfully'));
+        }
+    }
+    catch (error) {
+        (0, console_1.log)(error);
+        if (error instanceof Error) {
+            res.status(500).json((0, responseUtils_1.createServerResponse)(false, null, 'Failed to update user', null, error.message));
+        }
+        else {
+            res.status(500).json((0, responseUtils_1.createServerResponse)(false, null, 'Failed to update user', null, 'An unknown error occurred'));
+        }
+    }
+});
+exports.updateUser = updateUser;
