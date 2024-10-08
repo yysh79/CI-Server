@@ -119,7 +119,9 @@ const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (!deletedUser) {
             res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'User not found', 'The user with the provided ID does not exist in the database'));
         }
-        res.status(200).json((0, responseUtils_1.createServerResponse)(true, deletedUser, 'User deleted successfully', 'The user was successfully deleted from the database'));
+        else {
+            res.status(200).json((0, responseUtils_1.createServerResponse)(true, deletedUser, 'User deleted successfully', 'The user was successfully deleted from the database'));
+        }
     }
     catch (error) {
         console.error(error); // Log error

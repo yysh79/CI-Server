@@ -117,8 +117,9 @@ export const deleteUser = async (req: Request, res: Response) => {
         if (!deletedUser) {
              res.status(404).json(createServerResponse( false,null,'User not found','The user with the provided ID does not exist in the database'));
         }
-
-         res.status(200).json(createServerResponse( true, deletedUser, 'User deleted successfully', 'The user was successfully deleted from the database' )); 
+        else{
+        res.status(200).json(createServerResponse( true, deletedUser, 'User deleted successfully', 'The user was successfully deleted from the database' )); 
+        }
     } catch (error) {
         console.error(error); // Log error
      res.status(500).json(createServerResponse( false,null, 'Internal Server Error', 'An error occurred while attempting to delete the user', error instanceof Error ? error.message : String(error)));
