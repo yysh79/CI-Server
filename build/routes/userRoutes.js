@@ -35,4 +35,41 @@ userRoutes.post('/addUsers', userController_1.addUsers);
 userRoutes.get('/exportToExcelAllUsers', userController_1.exportToExcelAllUsers);
 userRoutes.get('/search/:searchName', userController_1.searchUser);
 userRoutes.delete('/deleteUser/:id', userController_1.deleteUser);
+/**
+ * @swagger
+ * /users/updateUser/{id}:
+ *   put:
+ *     summary: Update an existing user
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The ID of the user to update
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+userRoutes.put('/updateUser/:id', userController_1.updateUser);
+// userRoutes.put('/updateUser', updateUser);
 exports.default = userRoutes;
