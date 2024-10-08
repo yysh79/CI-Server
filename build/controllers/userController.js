@@ -82,13 +82,14 @@ const exportToExcelAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, f
         res.end();
     }
     catch (error) {
-        res.status(500).json({ message: 'Failed to export users to Excel', error });
+        console.error(error); // Log error
+        res.status(500).json((0, responseUtils_1.createServerResponse)(false, null, 'Failed to export users to Excel', 'An error occurred while attempting to export users to Excel', error instanceof Error ? error.message : String(error)));
     }
 });
 exports.exportToExcelAllUsers = exportToExcelAllUsers;
 const searchUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const search = req.params.searchName;
-    if (!search) {
+    if (search.length < 20) {
         res.status(400).json({ message: 'Search query is required' });
     }
     try {
@@ -116,13 +117,13 @@ const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const userId = req.params.id; // Get user ID from request parameters
         const deletedUser = yield userModel_1.default.findByIdAndDelete(userId); // Delete user by ID
         if (!deletedUser) {
-            res.status(404).json({ message: 'User not found' }); // User not found response
+            res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'User not found', 'The user with the provided ID does not exist in the database'));
         }
-        res.status(200).json({ message: 'User deleted successfully' }); // User deleted response
+        res.status(200).json((0, responseUtils_1.createServerResponse)(true, deletedUser, 'User deleted successfully', 'The user was successfully deleted from the database'));
     }
     catch (error) {
         console.error(error); // Log error
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json((0, responseUtils_1.createServerResponse)(false, null, 'Internal Server Error', 'An error occurred while attempting to delete the user', error instanceof Error ? error.message : String(error)));
     }
 });
 exports.deleteUser = deleteUser;
