@@ -5,6 +5,10 @@ import User from '../models/userModel'
 import { log } from 'console';
 import ExcelJS from 'exceljs';
 
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
+
+
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
         const users = await User.find();
@@ -149,5 +153,85 @@ export const updateUser = async (req: Request, res: Response) => {
             res.status(500).json(createServerResponse(false, null, 'Failed to update user', null, 'An unknown error occurred'));
         }
     }    
+};
+
+const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString(); // יוצר מספר בין 100000 ל-999999
+};
+
+
+export const createOTP = async (req: Request, res: Response) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        res.status(404).json(createServerResponse(false, null, 'User not found.', 'The user with the provided email does not exist.'));
+        return;
+    }
+
+    const otp = generateOTP();
+    user.code = otp;
+    user.expiresAt = new Date(Date.now() + 3600000); // תוקף אחרי שעה
+    await user.save();
+
+    // הגדרת ה-transporter עם פרטי האימות
+    const transporter = nodemailer.createTransport({
+        service: 'gmail', // או כל שירות דוא"ל אחר
+        auth: {
+            user: 'oral.yosf.h@gmail.com', // הכנס את המייל שלך
+            pass: 'liht aqzf whzb ipmm',  // הכנס את הסיסמה שלך או השתמש בסיסמה לאפליקציות אם נדרש
+        },
+    });
+
+    const mailOptions = {
+        from: 'oral.yosf.h@gmail.com', // הכנס את המייל שלך
+        to: email,
+        subject: 'Your OTP Code',
+        text: `Your OTP code is: ${otp}`,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        res.status(200).json(createServerResponse(true, null, 'OTP sent successfully!', 'The OTP has been sent to the provided email address.'));
+        return;
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error('Error sending email:', error);
+            res.status(500).json(createServerResponse(false, null, 'Error sending email', 'Failed to send the OTP email.', error.message));
+            return;
+        } else {
+            console.error('Unexpected error:', error);
+            res.status(500).json(createServerResponse(false, null, 'Unexpected error occurred', 'An unexpected error occurred.'));
+            return;
+        }
+    }
+};
+
+export const verifyOTP = async (req: Request, res: Response) => {
+    const { email, otp } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        res.status(404).json(createServerResponse(false, null, 'User not found.', 'The user with the provided email does not exist.'));
+        return;
+    }
+
+    if (user.code !== otp) {
+        res.status(400).json(createServerResponse(false, null, 'Invalid OTP.', 'The OTP provided does not match.'));
+        return;
+    }
+
+    const now = new Date();
+    if (user.expiresAt && now > user.expiresAt) {
+        res.status(400).json(createServerResponse(false, null, 'OTP has expired.', 'The provided OTP has exceeded its validity period.'));
+        return;
+    }
+
+    // אם הכל בסדר, ניתן לאשר את המשתמש
+    user.code = null; 
+    user.expiresAt = null; 
+    await user.save();
+
+    res.status(200).json(createServerResponse(true, null, 'OTP verified successfully!', 'The OTP has been successfully verified.'));
 };
 
