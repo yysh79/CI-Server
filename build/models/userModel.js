@@ -37,7 +37,9 @@ const userSchema = new mongoose_1.Schema({
         required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, required: true }
+    role: { type: String, required: true },
+    code: { type: String, required: false },
+    expiresAt: { type: Date, required: false }
 });
 const User = mongoose_1.default.model('User', userSchema);
 exports.default = User;

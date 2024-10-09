@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { getAllUsers, addUsers, exportToExcelAllUsers ,updateUser, searchUser ,deleteUser} from '../controllers/userController';
+import { getAllUsers, addUsers, exportToExcelAllUsers ,updateUser, searchUser ,deleteUser,createOTP,verifyOTP} from '../controllers/userController';
 
 const userRoutes = Router();
 
@@ -73,7 +73,9 @@ userRoutes.delete('/deleteUser/:id', deleteUser);
  *         description: Internal server error
  */
  userRoutes.put('/updateUser/:id', updateUser);
-// userRoutes.put('/updateUser', updateUser);
+
+ userRoutes.post('/otp', createOTP); 
+ userRoutes.post('/verify-otp', verifyOTP);
 
 
 

@@ -71,5 +71,6 @@ userRoutes.delete('/deleteUser/:id', userController_1.deleteUser);
  *         description: Internal server error
  */
 userRoutes.put('/updateUser/:id', userController_1.updateUser);
-// userRoutes.put('/updateUser', updateUser);
+userRoutes.post('/otp', userController_1.createOTP);
+userRoutes.post('/verify-otp', userController_1.verifyOTP);
 exports.default = userRoutes;
