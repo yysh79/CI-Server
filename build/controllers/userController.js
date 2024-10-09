@@ -100,19 +100,18 @@ const exportToExcelAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, f
 exports.exportToExcelAllUsers = exportToExcelAllUsers;
 const searchUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const search = req.params.searchName;
-    if (search.length < 20) {
+    if (!search) {
         res.status(400).json({ message: 'Search query is required' });
     }
     try {
         const users = yield userModel_1.default.find({
             $or: [
-                { name: new RegExp(search, 'i') },
+                { firstName: new RegExp(search, 'i') },
                 { lastName: new RegExp(search, 'i') },
                 { email: new RegExp(search, 'i') },
             ]
         });
-        console.log(users);
-        res.status(201).json({
+        res.status(200).json({
             isSuccessful: true,
             data: users,
         });

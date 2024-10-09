@@ -82,21 +82,19 @@ export const exportToExcelAllUsers = async (_req: Request, res: Response): Promi
 export const searchUser = async (req: Request, res: Response): Promise<void> => {
     const search = req.params.searchName as string;
 
-    if (search.length < 20) {
+    if (!search) {
         res.status(400).json({ message: 'Search query is required' });
     }
 
     try {
         const users = await User.find({
             $or: [
-                { name: new RegExp(search, 'i') },
+                { firstName: new RegExp(search, 'i') },
                 { lastName: new RegExp(search, 'i') },
                 { email: new RegExp(search, 'i') },
             ]
         });
-        console.log(users);
-        
-        res.status(201).json({
+        res.status(200).json({
             isSuccessful: true,
             data: users,
         });
