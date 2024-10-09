@@ -7,6 +7,8 @@ export interface IUser extends Document {
   email: string;
   password: string;
   role: string;
+  code : string | null;
+  expiresAt : Date | null ;
 }
 
 const userSchema = new Schema<IUser>({
@@ -21,7 +23,9 @@ const userSchema = new Schema<IUser>({
   },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role:  { type: String, required: true }
+  role:  { type: String, required: true },
+  code: { type: String, required: false },
+  expiresAt: { type: Date, required: false }
 });
 
  const User = mongoose.model<IUser>('User', userSchema);
