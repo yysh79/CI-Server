@@ -8,7 +8,6 @@ import ExcelJS from 'exceljs';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
-
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
         const users = await User.find();
@@ -158,7 +157,6 @@ export const updateUser = async (req: Request, res: Response) => {
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); // יוצר מספר בין 100000 ל-999999
 };
-
 
 export const createOTP = async (req: Request, res: Response) => {
     const { email } = req.body;
