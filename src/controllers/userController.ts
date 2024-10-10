@@ -232,6 +232,15 @@ export const verifyOTP = async (req: Request, res: Response) => {
     res.status(200).json(createServerResponse(true, null, 'OTP verified successfully!', 'The OTP has been successfully verified.'));
 };
 
+interface User {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string;
+    role: string;
+    comparePassword: (password: string) => Promise<boolean>;
+}
+
 export const generateJWTToken = (user: User): string => {
     const payload = {
         firstName:user.firstName,
