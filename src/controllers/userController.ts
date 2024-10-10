@@ -4,9 +4,9 @@ import { Request, Response } from 'express';
 import User from '../models/userModel'
 import { log } from 'console';
 import ExcelJS from 'exceljs';
-
+import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
-import crypto from 'crypto';
+
 
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
@@ -230,6 +230,18 @@ export const verifyOTP = async (req: Request, res: Response) => {
     await user.save();
 
     res.status(200).json(createServerResponse(true, null, 'OTP verified successfully!', 'The OTP has been successfully verified.'));
+};
+
+export const generateJWTToken = (user: User): string => {
+    const payload = {
+        firstName:user.firstName,
+        lastName:user.lastName,
+        phone:user.phone,
+        email:user.email,
+        role:user.role,
+    };
+
+    return jwt.sign(payload, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1h' });
 };
 
 export const login = async (req: Request, res: Response) => {
