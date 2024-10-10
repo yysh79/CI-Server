@@ -274,7 +274,7 @@ export const login = async (req: Request, res: Response) => {
         const isMatch = await user.comparePassword(password); 
 
         if (!isMatch) { 
-             res.status(401).json(createServerResponse(false, null, 'סיסמא לא תקינה !'));
+             res.status(401).json(createServerResponse(false, null, 'סיסמא לא תואמת !'));
              return;
         }
 
