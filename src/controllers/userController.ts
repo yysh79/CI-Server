@@ -257,25 +257,28 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body; 
 
     if (!email || !password) {
-        return res.status(400).json(createServerResponse(false, null, 'הכנס מייל וסיסמא !'));
+     res.status(400).json(createServerResponse(false, null, 'הכנס מייל וסיסמא !'));
+     return;
     }
 
     try {
         const user = await User.findOne({ email }); 
 
         if (!user) { 
-            return res.status(404).json(createServerResponse(false, null, 'משתמש לא נמצא !'));
+             res.status(404).json(createServerResponse(false, null, 'משתמש לא נמצא !'));
+             return;
         }
 
         
         const isMatch = await user.comparePassword(password); 
 
         if (!isMatch) { 
-            return res.status(401).json(createServerResponse(false, null, 'סיסמא לא תקינה !'));
+             res.status(401).json(createServerResponse(false, null, 'סיסמא לא תקינה !'));
+             return;
         }
 
        
-        const token = "generateJWTToken(user);"; 
+        const token = generateJWTToken(user); 
 
         res.status(200).json(createServerResponse(true, { user, token }, ' התחברות בהצלחה !'));
     } catch (error) {

@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { getAllUsers, addUsers, exportToExcelAllUsers ,updateUser, searchUser ,deleteUser,createOTP,verifyOTP,login} from '../controllers/userController';
+import { getAllUsers, addUsers, exportToExcelAllUsers ,updateUser, searchUser ,deleteUser,createOTP,verifyOTP, login} from '../controllers/userController';
 
 const userRoutes = Router();
 
@@ -33,7 +33,7 @@ userRoutes.get('/getAllUsers', getAllUsers);
  *       201:
  *         description: User added successfully
  */
-userRoutes.post('./login',login)
+userRoutes.post('/login',login)
 userRoutes.post('/addUsers', addUsers);
 userRoutes.get('/exportToExcelAllUsers', exportToExcelAllUsers);
 userRoutes.get('/search/:searchName', searchUser);
