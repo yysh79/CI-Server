@@ -263,6 +263,7 @@ export const login = async (req: Request, res: Response) => {
 
     try {
         const user = await User.findOne({ email }); 
+        console.log("Retrieved User Object:", user); 
 
         if (!user) { 
              res.status(404).json(createServerResponse(false, null, 'משתמש לא נמצא !'));
