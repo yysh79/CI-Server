@@ -30,6 +30,7 @@ const console_1 = require("console");
 const exceljs_1 = __importDefault(require("exceljs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const users = yield userModel_1.default.find();
@@ -257,14 +258,17 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return;
     }
     try {
-        const user = yield userModel_1.default.findOne({ email });
+        const user = yield userModel_1.default.findOne({ email }).exec();
+        console.log("Retrieved User Object:", user);
         if (!user) {
             res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'משתמש לא נמצא !'));
             return;
         }
-        const isMatch = yield user.comparePassword(password);
-        if (!isMatch) {
-            res.status(401).json((0, responseUtils_1.createServerResponse)(false, null, 'סיסמא לא תקינה !'));
+        const hashedPasswordFromDB = user.password;
+        const bcryptResult = yield bcrypt_1.default.compare(password, hashedPasswordFromDB);
+        console.log("Bcrypt comparison result:", bcryptResult); // Log the result of bcrypt comparison
+        if (!bcryptResult) {
+            res.status(401).json((0, responseUtils_1.createServerResponse)(false, null, 'סיסמא לא תואמת !'));
             return;
         }
         const token = (0, exports.generateJWTToken)(user);

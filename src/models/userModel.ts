@@ -25,19 +25,21 @@ const userSchema = new Schema<IUser>({
       },
       message: (props: any) => `${props.value} is not a valid phone number! Phone number must be between 8 and 12 digits.`
     },
-    required: true, unique: true
+    required: true, unique: true, trim: true,
   },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  email: { type: String, required: true, unique: true, trim: true },
+  password: { type: String, required: true, trim: true },
   role: { type: String, required: true },
-  code: { type: String, required: false },
+  code: { type: String, required: false , trim: true},
   expiresAt: { type: Date, required: false }
 });
 
 userSchema.pre<IUser>('save', async function (next) {
   if (!this.isModified('password')) return next();
+  console.log('Original Password:', this.password);
   const salt = await bcrypt.genSalt(10); 
   this.password = await bcrypt.hash(this.password, salt); 
+  console.log('Hashed Password:', this.password);
   next(); 
 });
 

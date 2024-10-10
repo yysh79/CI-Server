@@ -6,6 +6,7 @@ import { log } from 'console';
 import ExcelJS from 'exceljs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import bcrypt from 'bcrypt'
 
 
 export const getAllUsers = async (_req: Request, res: Response) => {
@@ -262,7 +263,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     try {
-        const user = await User.findOne({ email }); 
+        const user = await User.findOne({ email }).exec(); 
         console.log("Retrieved User Object:", user); 
 
         if (!user) { 
@@ -271,9 +272,11 @@ export const login = async (req: Request, res: Response) => {
         }
 
         
-        const isMatch = await user.comparePassword(password); 
+        const hashedPasswordFromDB = user.password;
+        const bcryptResult = await bcrypt.compare(password, hashedPasswordFromDB);
+        console.log("Bcrypt comparison result:", bcryptResult); // Log the result of bcrypt comparison
 
-        if (!isMatch) { 
+        if (!bcryptResult) { 
              res.status(401).json(createServerResponse(false, null, 'סיסמא לא תואמת !'));
              return;
         }
