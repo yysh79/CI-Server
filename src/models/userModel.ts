@@ -1,5 +1,5 @@
-import mongoose, { Schema, Document } from 'mongoose';
-
+import mongoose, { Schema, Document,Model } from 'mongoose';
+import bcrypt from 'bcrypt';
 export interface IUser extends Document {
   firstName: string;
   lastName: string;
@@ -11,6 +11,7 @@ export interface IUser extends Document {
   role: string;
   code: string | null;
   expiresAt: Date | null;
+  comparePassword: (password: string) => Promise<boolean>;
 }
 
 const userSchema = new Schema<IUser>({
@@ -33,5 +34,17 @@ const userSchema = new Schema<IUser>({
   expiresAt: { type: Date, required: false }
 });
 
-const User = mongoose.model<IUser>('User', userSchema);
-export default User;
+userSchema.pre<IUser>('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  const salt = await bcrypt.genSalt(10); 
+  this.password = await bcrypt.hash(this.password, salt); 
+  next(); 
+});
+
+
+userSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
+  return await bcrypt.compare(password, this.password); 
+};
+
+const User: Model<IUser> = mongoose.model<IUser>('User', userSchema); // Create the User model
+export default User; 
