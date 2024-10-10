@@ -232,3 +232,36 @@ export const verifyOTP = async (req: Request, res: Response) => {
     res.status(200).json(createServerResponse(true, null, 'OTP verified successfully!', 'The OTP has been successfully verified.'));
 };
 
+export const login = async (req: Request, res: Response) => {
+    const { email, password } = req.body; 
+
+    if (!email || !password) {
+        return res.status(400).json(createServerResponse(false, null, 'הכנס מייל וסיסמא !'));
+    }
+
+    try {
+        const user = await User.findOne({ email }); 
+
+        if (!user) { 
+            return res.status(404).json(createServerResponse(false, null, 'משתמש לא נמצא !'));
+        }
+
+        
+        const isMatch = await user.comparePassword(password); 
+
+        if (!isMatch) { 
+            return res.status(401).json(createServerResponse(false, null, 'סיסמא לא תקינה !'));
+        }
+
+       
+        const token = "generateJWTToken(user);"; 
+
+        res.status(200).json(createServerResponse(true, { user, token }, ' התחברות בהצלחה !'));
+    } catch (error) {
+        console.error(error); 
+        res.status(500).json(createServerResponse(false, null, 'Internal server error', null, error instanceof Error ? error.message : String(error)));
+    }
+};
+
+
+
