@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { getAllUsers, addUsers, exportToExcelAllUsers ,updateUser, searchUser ,deleteUser,createOTP,verifyOTP ,login} from '../controllers/userController';
+import { getAllUsers, addUsers, exportToExcelAllUsers, updateUser, searchUser, deleteUser, createOTP, verifyOTP, login, logout } from '../controllers/userController';
 
 const userRoutes = Router();
 
@@ -33,7 +33,7 @@ userRoutes.get('/getAllUsers', getAllUsers);
  *       201:
  *         description: User added successfully
  */
-userRoutes.post('/login',login)
+userRoutes.post('/login', login)
 userRoutes.post('/addUsers', addUsers);
 userRoutes.get('/exportToExcelAllUsers', exportToExcelAllUsers);
 userRoutes.get('/search/:searchName', searchUser);
@@ -73,7 +73,7 @@ userRoutes.delete('/deleteUser/:id', deleteUser);
  *       500:
  *         description: Internal server error
  */
- userRoutes.put('/updateUser/:id', updateUser);
+userRoutes.put('/updateUser/:id', updateUser);
 /**
  * @swagger
  * /users/otp:
@@ -98,37 +98,38 @@ userRoutes.delete('/deleteUser/:id', deleteUser);
  *       500:
  *         description: Internal server error
  */
- userRoutes.post('/otp', createOTP); 
- /**
- * @swagger
- * /users/verify-otp:
- *   post:
- *     summary: Verify OTP
- *     description: Verifies the one-time password (OTP) sent to the user's phone
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               phone:
- *                 type: string
- *                 description: The user's phone number
- *               otp:
- *                 type: string
- *                 description: The OTP sent to the user's phone
- *     responses:
- *       200:
- *         description: OTP verified successfully
- *       400:
- *         description: Invalid OTP or phone number
- *       500:
- *         description: Internal server error
- */
+userRoutes.post('/otp', createOTP);
+/**
+* @swagger
+* /users/verify-otp:
+*   post:
+*     summary: Verify OTP
+*     description: Verifies the one-time password (OTP) sent to the user's phone
+*     requestBody:
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               phone:
+*                 type: string
+*                 description: The user's phone number
+*               otp:
+*                 type: string
+*                 description: The OTP sent to the user's phone
+*     responses:
+*       200:
+*         description: OTP verified successfully
+*       400:
+*         description: Invalid OTP or phone number
+*       500:
+*         description: Internal server error
+*/
 userRoutes.post('/verify-otp', verifyOTP);
 
- userRoutes.post('/verify-otp', verifyOTP);
+userRoutes.post('/verify-otp', verifyOTP);
+userRoutes.post('/logout', logout);
 
 
 
