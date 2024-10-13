@@ -4,10 +4,9 @@ import { Request, Response } from 'express';
 import User from '../models/userModel'
 import { log } from 'console';
 import ExcelJS from 'exceljs';
-import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
-import bcrypt from 'bcrypt'
 
+import nodemailer from 'nodemailer';
+import bcrypt from 'bcrypt';
 
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
@@ -86,19 +85,21 @@ export const exportToExcelAllUsers = async (_req: Request, res: Response): Promi
 export const searchUser = async (req: Request, res: Response): Promise<void> => {
     const search = req.params.searchName as string;
 
-    if (!search) {
+    if (search.length < 20) {
         res.status(400).json({ message: 'Search query is required' });
     }
 
     try {
         const users = await User.find({
             $or: [
-                { firstName: new RegExp(search, 'i') },
+                { name: new RegExp(search, 'i') },
                 { lastName: new RegExp(search, 'i') },
                 { email: new RegExp(search, 'i') },
             ]
         });
-        res.status(200).json({
+        console.log(users);
+        
+        res.status(201).json({
             isSuccessful: true,
             data: users,
         });
@@ -168,10 +169,10 @@ export const createOTP = async (req: Request, res: Response) => {
     }
 
     const otp = generateOTP();
-    user.code = otp;
+    const saltRounds = 10;
+    user.code = await bcrypt.hash(otp, saltRounds);   // שליחת קוד מוצפן
     user.expiresAt = new Date(Date.now() + 3600000); // תוקף אחרי שעה
     await user.save();
-
     // הגדרת ה-transporter עם פרטי האימות
     const transporter = nodemailer.createTransport({
         service: 'gmail', // או כל שירות דוא"ל אחר
@@ -208,23 +209,24 @@ export const createOTP = async (req: Request, res: Response) => {
 export const verifyOTP = async (req: Request, res: Response) => {
     const { email, otp } = req.body;
     const user = await User.findOne({ email });
-
     if (!user) {
         res.status(404).json(createServerResponse(false, null, 'User not found.', 'The user with the provided email does not exist.'));
         return;
     }
-
-    if (user.code !== otp) {
+    if (!user.code) {
+        res.status(400).json(createServerResponse(false, null, 'Invalid OTP.', 'No OTP found for this user.'));
+        return;
+    }
+    const isMatch = await bcrypt.compare(otp, user.code); // השוואת ה-OTP המוזן עם הקוד המוצפן
+    if (!isMatch) {
         res.status(400).json(createServerResponse(false, null, 'Invalid OTP.', 'The OTP provided does not match.'));
         return;
     }
-
     const now = new Date();
     if (user.expiresAt && now > user.expiresAt) {
         res.status(400).json(createServerResponse(false, null, 'OTP has expired.', 'The provided OTP has exceeded its validity period.'));
         return;
     }
-
     // אם הכל בסדר, ניתן לאשר את המשתמש
     user.code = null; 
     user.expiresAt = null; 
@@ -232,64 +234,4 @@ export const verifyOTP = async (req: Request, res: Response) => {
 
     res.status(200).json(createServerResponse(true, null, 'OTP verified successfully!', 'The OTP has been successfully verified.'));
 };
-
-interface User {
-    firstName: string;
-    lastName: string;
-    phone: string;
-    email: string;
-    role: string;
-    comparePassword: (password: string) => Promise<boolean>;
-}
-
-export const generateJWTToken = (user: User): string => {
-    const payload = {
-        firstName:user.firstName,
-        lastName:user.lastName,
-        phone:user.phone,
-        email:user.email,
-        role:user.role,
-    };
-
-    return jwt.sign(payload, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1h' });
-};
-
-export const login = async (req: Request, res: Response) => {
-    const { email, password } = req.body; 
-
-    if (!email || !password) {
-     res.status(400).json(createServerResponse(false, null, 'הכנס מייל וסיסמא !'));
-     return;
-    }
-
-    try {
-        const user = await User.findOne({ email }).exec(); 
-        console.log("Retrieved User Object:", user); 
-
-        if (!user) { 
-             res.status(404).json(createServerResponse(false, null, 'משתמש לא נמצא !'));
-             return;
-        }
-
-        
-        const hashedPasswordFromDB = user.password;
-        const bcryptResult = await bcrypt.compare(password, hashedPasswordFromDB);
-        console.log("Bcrypt comparison result:", bcryptResult); // Log the result of bcrypt comparison
-
-        if (!bcryptResult) { 
-             res.status(401).json(createServerResponse(false, null, 'סיסמא לא תואמת !'));
-             return;
-        }
-
-       
-        const token = generateJWTToken(user); 
-
-        res.status(200).json(createServerResponse(true, { user, token }, ' התחברות בהצלחה !'));
-    } catch (error) {
-        console.error(error); 
-        res.status(500).json(createServerResponse(false, null, 'Internal server error', null, error instanceof Error ? error.message : String(error)));
-    }
-};
-
-
 
