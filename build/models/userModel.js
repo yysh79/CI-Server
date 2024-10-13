@@ -22,24 +22,55 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const userSchema = new mongoose_1.Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
-    phone: { type: String,
+    phone: {
+        type: String,
         validate: {
             validator: function (v) {
                 return /^\d{8,12}$/.test(v);
             },
             message: (props) => `${props.value} is not a valid phone number! Phone number must be between 8 and 12 digits.`
         },
-        required: true, unique: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+        required: true, unique: true, trim: true,
+    },
+    email: { type: String, required: true, unique: true, trim: true },
+    password: { type: String, required: true, trim: true },
     role: { type: String, required: true },
-    code: { type: String, required: false },
+    code: { type: String, required: false, trim: true },
     expiresAt: { type: Date, required: false }
 });
-const User = mongoose_1.default.model('User', userSchema);
+userSchema.pre('save', function (next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!this.isModified('password'))
+            return next();
+        console.log('Original Password:', this.password);
+        const salt = yield bcrypt_1.default.genSalt(10);
+        this.password = yield bcrypt_1.default.hash(this.password, salt);
+        console.log('Hashed Password:', this.password);
+        next();
+    });
+});
+userSchema.methods.comparePassword = function (password) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield bcrypt_1.default.compare(password, this.password);
+    });
+};
+const User = mongoose_1.default.model('User', userSchema); // Create the User model
 exports.default = User;
