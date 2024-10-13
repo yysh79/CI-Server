@@ -35,7 +35,10 @@ const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const users = yield userModel_1.default.find();
         (0, console_1.log)(users);
-        res.status(200).json(users);
+        res.status(200).json({
+            isSuccessful: true,
+            data: users,
+        });
     }
     catch (error) {
         (0, console_1.log)(error);
@@ -105,13 +108,14 @@ const searchUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const search = req.params.searchName;
     if (!search) {
         res.status(400).json({ message: 'Search query is required' });
+        return;
     }
     try {
         const users = yield userModel_1.default.find({
             $or: [
-                { firstName: new RegExp(search, 'i') },
-                { lastName: new RegExp(search, 'i') },
-                { email: new RegExp(search, 'i') },
+                { firstName: new RegExp(`^${search}`, 'i') },
+                { lastName: new RegExp(`^${search}`, 'i') },
+                { email: new RegExp(`^${search}`, 'i') },
             ]
         });
         res.status(200).json({

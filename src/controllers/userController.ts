@@ -13,14 +13,17 @@ export const getAllUsers = async (_req: Request, res: Response) => {
     try {
         const users = await User.find();
         log(users);      
-        res.status(200).json(users);
+        res.status(200).json({
+            isSuccessful: true,
+            data: users,
+        });
     } catch (error) {
         log(error);      
         res.status(500).json({ message: 'Failed to fetch users', error:error });
     }
 };
 
-export const addUsers = async (req: Request, res: Response) => {
+export const addUsers = async (req: Request, res: Response): Promise<void> => {
     try {
         // קח את המידע מהבקשה
         const userData = req.body;
@@ -88,14 +91,15 @@ export const searchUser = async (req: Request, res: Response): Promise<void> => 
 
     if (!search) {
         res.status(400).json({ message: 'Search query is required' });
+        return;
     }
 
     try {
         const users = await User.find({
             $or: [
-                { firstName: new RegExp(search, 'i') },
-                { lastName: new RegExp(search, 'i') },
-                { email: new RegExp(search, 'i') },
+                { firstName: new RegExp(`^${search}`, 'i') },
+                { lastName: new RegExp(`^${search}`, 'i') },
+                { email: new RegExp(`^${search}`, 'i') }, 
             ]
         });
         res.status(200).json({
