@@ -235,11 +235,61 @@ export const verifyOTP = async (req: Request, res: Response) => {
     res.status(200).json(createServerResponse(true, null, 'OTP verified successfully!', 'The OTP has been successfully verified.'));
 };
 
+
 interface User {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string;
+    role: string;
+    comparePassword: (password: string) => Promise<boolean>;
 }
 
 export const generateJWTToken = (user: User): string => {
+    const payload = {
+        firstName:user.firstName,
+        lastName:user.lastName,
+        phone:user.phone,
+        email:user.email,
+        role:user.role,
+    };
+
+    return jwt.sign(payload, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1h' });
 };
 
 export const login = async (req: Request, res: Response) => {
+    const { email, password } = req.body; 
+
+    if (!email || !password) {
+     res.status(400).json(createServerResponse(false, null, 'הכנס מייל וסיסמא !'));
+     return;
+    }
+
+    try {
+        const user = await User.findOne({ email }).exec(); 
+        console.log("Retrieved User Object:", user); 
+
+        if (!user) { 
+             res.status(404).json(createServerResponse(false, null, 'משתמש לא נמצא !'));
+             return;
+        }
+
+        
+        const hashedPasswordFromDB = user.password;
+        const bcryptResult = await bcrypt.compare(password, hashedPasswordFromDB);
+        console.log("Bcrypt comparison result:", bcryptResult); // Log the result of bcrypt comparison
+
+        if (!bcryptResult) { 
+             res.status(401).json(createServerResponse(false, null, 'סיסמא לא תואמת !'));
+             return;
+        }
+
+       
+        const token = generateJWTToken(user); 
+
+        res.status(200).json(createServerResponse(true, { user, token }, ' התחברות בהצלחה !'));
+    } catch (error) {
+        console.error(error); 
+        res.status(500).json(createServerResponse(false, null, 'Internal server error', null, error instanceof Error ? error.message : String(error)));
+    }
 }
