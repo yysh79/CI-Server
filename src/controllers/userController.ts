@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import User from '../models/userModel'
 import { log } from 'console';
 import ExcelJS from 'exceljs';
-
+import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcrypt';
 
@@ -235,3 +235,11 @@ export const verifyOTP = async (req: Request, res: Response) => {
     res.status(200).json(createServerResponse(true, null, 'OTP verified successfully!', 'The OTP has been successfully verified.'));
 };
 
+interface User {
+}
+
+export const generateJWTToken = (user: User): string => {
+};
+
+export const login = async (req: Request, res: Response) => {
+}
