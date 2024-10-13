@@ -3,10 +3,11 @@ import { createServerResponse } from '../utils/responseUtils';
 import { Request, Response } from 'express';
 import User from '../models/userModel'
 import { log } from 'console';
-import ExcelJS from 'exceljs';
+import ExcelJS, { Cell }  from 'exceljs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt'
+
 
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
@@ -52,26 +53,51 @@ export const exportToExcelAllUsers = async (_req: Request, res: Response): Promi
 
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Users');
+        worksheet.views = [{ rightToLeft: true }];
+
+        
+        const headerStyle = {
+            font: {
+                bold: true,
+                size: 12, 
+            },
+            alignment: {
+                horizontal: 'center' as const,
+                vertical: 'middle' as const,
+            },
+        };
 
 
          worksheet.columns = [
-            { header: 'שם פרטי', key: 'Fname', width: 30 },
-            { header: 'שם משפחה', key: 'Lname', width: 30 },
-            { header: 'מספר טלפון', key: 'phone', width: 30 },
-            { header: 'מייל', key: 'email', width: 30 },
-            { header: 'תפקיד', key: 'role', width: 30 },
-            { header: 'סיסמא', key: 'password', width: 30 },
+            { header: 'שם פרטי', key: 'Fname', width: 20, style: headerStyle },
+            { header: 'שם משפחה', key: 'Lname', width: 20, style: headerStyle },
+            { header: 'מספר טלפון', key: 'phone', width: 25, style: headerStyle },
+            { header: 'מייל', key: 'email', width: 30, style: headerStyle },
+            { header: 'תפקיד', key: 'role', width: 15, style: headerStyle },
+            { header: 'סיסמא', key: 'password', width: 80, style: headerStyle },
         ];
+
         users.forEach(user => {
-            worksheet.addRow({
-                Fname: user.firstName, // הוספת שורה עבור כל משתמש
+           const row= worksheet.addRow({ // הוספת שורה עבור כל משתמש
+                Fname: user.firstName, 
                 Lname: user.lastName,
                 phone: user.phone,
                 email: user.email,
                 password: user.password, 
                 role: user.role,
             });
+
+            row.eachCell((cell:Cell) => {
+                cell.style.alignment = {
+                    horizontal: 'center' as const, 
+                    vertical: 'middle' as const,
+                };
+                cell.style.font = { 
+                    bold: false,
+                };
+            });
         });
+
         res.setHeader('Content-Disposition', 'attachment; filename="users.xlsx"');
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
@@ -83,12 +109,12 @@ export const exportToExcelAllUsers = async (_req: Request, res: Response): Promi
     console.error(error); // Log error
     res.status(500).json(createServerResponse(false, null,'Failed to export users to Excel', 'An error occurred while attempting to export users to Excel',error instanceof Error ? error.message : String(error)));
     }
-}
+};
 
 export const searchUser = async (req: Request, res: Response): Promise<void> => {
     const search = req.params.searchName as string;
 
-    if (search.length < 20) {
+    if (!search) {
         res.status(400).json({ message: 'Search query is required' });
         return;
     }
@@ -101,9 +127,7 @@ export const searchUser = async (req: Request, res: Response): Promise<void> => 
                 { email: new RegExp(`^${search}`, 'i') }, 
             ]
         });
-        console.log(users);
-        
-        res.status(201).json({
+        res.status(200).json({
             isSuccessful: true,
             data: users,
         });
@@ -113,7 +137,7 @@ export const searchUser = async (req: Request, res: Response): Promise<void> => 
         res.status(500).json({ message: 'Internal server error' });
     }
 
-}
+};
 
 export const deleteUser = async (req: Request, res: Response) => {
     try {
@@ -130,7 +154,7 @@ export const deleteUser = async (req: Request, res: Response) => {
         console.error(error); // Log error
      res.status(500).json(createServerResponse( false,null, 'Internal Server Error', 'An error occurred while attempting to delete the user', error instanceof Error ? error.message : String(error)));
     }
-}
+};
 
 export const updateUser = async (req: Request, res: Response) => {
     const userId = req.params.id; // קבלת ה-ID מהפרמטרים של הבקשה
@@ -173,10 +197,10 @@ export const createOTP = async (req: Request, res: Response) => {
     }
 
     const otp = generateOTP();
-    const saltRounds = 10;
-    user.code = await bcrypt.hash(otp, saltRounds);   // שליחת קוד מוצפן
+    user.code = otp;
     user.expiresAt = new Date(Date.now() + 3600000); // תוקף אחרי שעה
     await user.save();
+
     // הגדרת ה-transporter עם פרטי האימות
     const transporter = nodemailer.createTransport({
         service: 'gmail', // או כל שירות דוא"ל אחר
@@ -213,24 +237,23 @@ export const createOTP = async (req: Request, res: Response) => {
 export const verifyOTP = async (req: Request, res: Response) => {
     const { email, otp } = req.body;
     const user = await User.findOne({ email });
+
     if (!user) {
         res.status(404).json(createServerResponse(false, null, 'User not found.', 'The user with the provided email does not exist.'));
         return;
     }
-    if (!user.code) {
-        res.status(400).json(createServerResponse(false, null, 'Invalid OTP.', 'No OTP found for this user.'));
-        return;
-    }
-    const isMatch = await bcrypt.compare(otp, user.code); // השוואת ה-OTP המוזן עם הקוד המוצפן
-    if (!isMatch) {
+
+    if (user.code !== otp) {
         res.status(400).json(createServerResponse(false, null, 'Invalid OTP.', 'The OTP provided does not match.'));
         return;
     }
+
     const now = new Date();
     if (user.expiresAt && now > user.expiresAt) {
         res.status(400).json(createServerResponse(false, null, 'OTP has expired.', 'The provided OTP has exceeded its validity period.'));
         return;
     }
+
     // אם הכל בסדר, ניתן לאשר את המשתמש
     user.code = null; 
     user.expiresAt = null; 
@@ -239,7 +262,6 @@ export const verifyOTP = async (req: Request, res: Response) => {
     res.status(200).json(createServerResponse(true, null, 'OTP verified successfully!', 'The OTP has been successfully verified.'));
 };
 
-
 interface User {
     firstName: string;
     lastName: string;
@@ -247,7 +269,7 @@ interface User {
     email: string;
     role: string;
     comparePassword: (password: string) => Promise<boolean>;
-}
+};
 
 export const generateJWTToken = (user: User): string => {
     const payload = {
@@ -296,4 +318,7 @@ export const login = async (req: Request, res: Response) => {
         console.error(error); 
         res.status(500).json(createServerResponse(false, null, 'Internal server error', null, error instanceof Error ? error.message : String(error)));
     }
-}
+};
+
+
+
