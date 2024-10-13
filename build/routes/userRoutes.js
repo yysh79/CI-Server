@@ -13,6 +13,25 @@ const userRoutes = (0, express_1.Router)();
  *         description: A list of users
  */
 userRoutes.get('/getAllUsers', userController_1.getAllUsers);
+/**
+ * @swagger
+ * /users/addUsers:
+ *   post:
+ *     summary: Add new users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User added successfully
+ */
+userRoutes.post('/login', userController_1.login);
 userRoutes.post('/addUsers', userController_1.addUsers);
 userRoutes.get('/exportToExcelAllUsers', userController_1.exportToExcelAllUsers);
 userRoutes.get('/search/:searchName', userController_1.searchUser);
