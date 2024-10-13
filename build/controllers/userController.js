@@ -29,6 +29,7 @@ const userModel_1 = __importDefault(require("../models/userModel"));
 const console_1 = require("console");
 const exceljs_1 = __importDefault(require("exceljs"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const users = yield userModel_1.default.find();
@@ -180,7 +181,8 @@ const createOTP = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return;
     }
     const otp = generateOTP();
-    user.code = otp;
+    const saltRounds = 10;
+    user.code = yield bcrypt_1.default.hash(otp, saltRounds); // שליחת קוד מוצפן
     user.expiresAt = new Date(Date.now() + 3600000); // תוקף אחרי שעה
     yield user.save();
     // הגדרת ה-transporter עם פרטי האימות
@@ -223,7 +225,12 @@ const verifyOTP = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'User not found.', 'The user with the provided email does not exist.'));
         return;
     }
-    if (user.code !== otp) {
+    if (!user.code) {
+        res.status(400).json((0, responseUtils_1.createServerResponse)(false, null, 'Invalid OTP.', 'No OTP found for this user.'));
+        return;
+    }
+    const isMatch = yield bcrypt_1.default.compare(otp, user.code); // השוואת ה-OTP המוזן עם הקוד המוצפן
+    if (!isMatch) {
         res.status(400).json((0, responseUtils_1.createServerResponse)(false, null, 'Invalid OTP.', 'The OTP provided does not match.'));
         return;
     }

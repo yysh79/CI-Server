@@ -7,34 +7,12 @@
     },
     "servers": [
         {
-            "url": "http://localhost:3001",
+            "url": "http://localhost:3000/users",
             "description": "Development server"
         }
     ],
     "paths": {
-        "/users": {
-            "get": {
-                "summary": "Get list of users",
-                "description": "Retrieves a list of all users in the system",
-                "responses": {
-                    "200": {
-                        "description": "A JSON array of users",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Users not found"
-                    },
-                    "500": {
-                        "description": "Internal server error"
-                    }
-                }
-            },
+        "/users/addUsers": {
             "post": {
                 "summary": "Add a new user",
                 "description": "Creates a new user in the system",
@@ -66,6 +44,73 @@
                     },
                     "500": {
                         "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/users/updateUser/:id": {
+            "put": {
+                "summary": "Update user",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User updated"
+                    }
+                }
+            }
+        },
+        "/users/getAllUsers": {
+            "get": {
+                "summary": "Get list of users",
+                "description": "Retrieves a list of all users in the system",
+                "responses": {
+                    "200": {
+                        "description": "A JSON array of users",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Users not found"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/users/otp": {
+            "post": {
+                "summary": "Create OTP",
+                "responses": {
+                    "200": {
+                        "description": "OTP created"
+                    }
+                }
+            }
+        },
+        "/users/verify-otp": {
+            "post": {
+                "summary": "Verify OTP",
+                "responses": {
+                    "200": {
+                        "description": "OTP verified"
+                    },
+                    "400": {
+                        "description": "Invalid OTP"
                     }
                 }
             }

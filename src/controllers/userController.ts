@@ -6,7 +6,7 @@ import { log } from 'console';
 import ExcelJS from 'exceljs';
 
 import nodemailer from 'nodemailer';
-import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
@@ -169,10 +169,10 @@ export const createOTP = async (req: Request, res: Response) => {
     }
 
     const otp = generateOTP();
-    user.code = otp;
+    const saltRounds = 10;
+    user.code = await bcrypt.hash(otp, saltRounds);   // שליחת קוד מוצפן
     user.expiresAt = new Date(Date.now() + 3600000); // תוקף אחרי שעה
     await user.save();
-
     // הגדרת ה-transporter עם פרטי האימות
     const transporter = nodemailer.createTransport({
         service: 'gmail', // או כל שירות דוא"ל אחר
@@ -209,23 +209,24 @@ export const createOTP = async (req: Request, res: Response) => {
 export const verifyOTP = async (req: Request, res: Response) => {
     const { email, otp } = req.body;
     const user = await User.findOne({ email });
-
     if (!user) {
         res.status(404).json(createServerResponse(false, null, 'User not found.', 'The user with the provided email does not exist.'));
         return;
     }
-
-    if (user.code !== otp) {
+    if (!user.code) {
+        res.status(400).json(createServerResponse(false, null, 'Invalid OTP.', 'No OTP found for this user.'));
+        return;
+    }
+    const isMatch = await bcrypt.compare(otp, user.code); // השוואת ה-OTP המוזן עם הקוד המוצפן
+    if (!isMatch) {
         res.status(400).json(createServerResponse(false, null, 'Invalid OTP.', 'The OTP provided does not match.'));
         return;
     }
-
     const now = new Date();
     if (user.expiresAt && now > user.expiresAt) {
         res.status(400).json(createServerResponse(false, null, 'OTP has expired.', 'The provided OTP has exceeded its validity period.'));
         return;
     }
-
     // אם הכל בסדר, ניתן לאשר את המשתמש
     user.code = null; 
     user.expiresAt = null; 
