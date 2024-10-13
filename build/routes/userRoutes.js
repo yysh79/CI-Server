@@ -31,6 +31,7 @@ userRoutes.get('/getAllUsers', userController_1.getAllUsers);
  *       201:
  *         description: User added successfully
  */
+userRoutes.post('/login', userController_1.login);
 userRoutes.post('/addUsers', userController_1.addUsers);
 userRoutes.get('/exportToExcelAllUsers', userController_1.exportToExcelAllUsers);
 userRoutes.get('/search/:searchName', userController_1.searchUser);
