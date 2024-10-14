@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { getAllUsers, addUsers, exportToExcelAllUsers, updateUser, searchUser, deleteUser, createOTP, verifyOTP, login, logout } from '../controllers/userController';
+import { getAllUsers, addUsers, exportToExcelAllUsers, updateUser, searchUser, deleteUser, createOTP, verifyOTP, login } from '../controllers/userController';
 
 const userRoutes = Router();
 
