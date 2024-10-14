@@ -319,6 +319,4 @@ export const login = async (req: Request, res: Response) => {
         res.status(500).json(createServerResponse(false, null, 'Internal server error', null, error instanceof Error ? error.message : String(error)));
     }
 };
-export const logout = (req: Request, res: Response) => {
-    res.status(200).json(createServerResponse(true, null, 'התנתקת בהצלחה!'));
-};
+

@@ -129,7 +129,6 @@ userRoutes.post('/otp', createOTP);
 userRoutes.post('/verify-otp', verifyOTP);
 
 userRoutes.post('/verify-otp', verifyOTP);
-userRoutes.post('/logout', logout);
 
 
 
