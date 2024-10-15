@@ -88,22 +88,42 @@ const exportToExcelAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, f
         const users = yield userModel_1.default.find().lean();
         const workbook = new exceljs_1.default.Workbook();
         const worksheet = workbook.addWorksheet('Users');
+        worksheet.views = [{ rightToLeft: true }];
+        const headerStyle = {
+            font: {
+                bold: true,
+                size: 12,
+            },
+            alignment: {
+                horizontal: 'center',
+                vertical: 'middle',
+            },
+        };
         worksheet.columns = [
-            { header: 'שם פרטי', key: 'Fname', width: 30 },
-            { header: 'שם משפחה', key: 'Lname', width: 30 },
-            { header: 'מספר טלפון', key: 'phone', width: 30 },
-            { header: 'מייל', key: 'email', width: 30 },
-            { header: 'תפקיד', key: 'role', width: 30 },
-            { header: 'סיסמא', key: 'password', width: 30 },
+            { header: 'שם פרטי', key: 'Fname', width: 20, style: headerStyle },
+            { header: 'שם משפחה', key: 'Lname', width: 20, style: headerStyle },
+            { header: 'מספר טלפון', key: 'phone', width: 25, style: headerStyle },
+            { header: 'מייל', key: 'email', width: 30, style: headerStyle },
+            { header: 'תפקיד', key: 'role', width: 15, style: headerStyle },
+            { header: 'סיסמא', key: 'password', width: 80, style: headerStyle },
         ];
         users.forEach(user => {
-            worksheet.addRow({
-                Fname: user.firstName, // הוספת שורה עבור כל משתמש
+            const row = worksheet.addRow({
+                Fname: user.firstName,
                 Lname: user.lastName,
                 phone: user.phone,
                 email: user.email,
                 password: user.password,
                 role: user.role,
+            });
+            row.eachCell((cell) => {
+                cell.style.alignment = {
+                    horizontal: 'center',
+                    vertical: 'middle',
+                };
+                cell.style.font = {
+                    bold: false,
+                };
             });
         });
         res.setHeader('Content-Disposition', 'attachment; filename="users.xlsx"');
@@ -198,8 +218,7 @@ const createOTP = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return;
     }
     const otp = generateOTP();
-    const saltRounds = 10;
-    user.code = yield bcrypt_1.default.hash(otp, saltRounds); // שליחת קוד מוצפן
+    user.code = otp;
     user.expiresAt = new Date(Date.now() + 3600000); // תוקף אחרי שעה
     yield user.save();
     // הגדרת ה-transporter עם פרטי האימות
@@ -242,12 +261,7 @@ const verifyOTP = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'User not found.', 'The user with the provided email does not exist.'));
         return;
     }
-    if (!user.code) {
-        res.status(400).json((0, responseUtils_1.createServerResponse)(false, null, 'Invalid OTP.', 'No OTP found for this user.'));
-        return;
-    }
-    const isMatch = yield bcrypt_1.default.compare(otp, user.code); // השוואת ה-OTP המוזן עם הקוד המוצפן
-    if (!isMatch) {
+    if (user.code !== otp) {
         res.status(400).json((0, responseUtils_1.createServerResponse)(false, null, 'Invalid OTP.', 'The OTP provided does not match.'));
         return;
     }
@@ -263,6 +277,7 @@ const verifyOTP = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(200).json((0, responseUtils_1.createServerResponse)(true, null, 'OTP verified successfully!', 'The OTP has been successfully verified.'));
 });
 exports.verifyOTP = verifyOTP;
+;
 const generateJWTToken = (user) => {
     const payload = {
         firstName: user.firstName,
