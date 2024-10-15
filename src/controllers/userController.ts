@@ -2,6 +2,7 @@
 import { createServerResponse } from '../utils/responseUtils';
 import { Request, Response } from 'express';
 import User from '../models/userModel'
+import Form from '../models/formModel';
 import { log } from 'console';
 import ExcelJS from 'exceljs';
 import jwt from 'jsonwebtoken';
@@ -21,6 +22,16 @@ export const getAllUsers = async (_req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to fetch users', error:error });
     }
 };
+export const getAllForms = async (_req: Request, res: Response) => {
+    try {
+        const allFroms = await Form.find();
+        log(allFroms)
+        res.status(200).json({  isSuccessful: true, data: allFroms,});
+    } catch (error:any) {
+        log(error);      
+        res.status(500).json({isSuccessful: false, message: 'Failed to fetch forms', error: error.message });
+    }
+}
 
 export const addUsers = async (req: Request, res: Response): Promise<void> => {
     try {

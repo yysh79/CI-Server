@@ -23,9 +23,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = exports.generateJWTToken = exports.verifyOTP = exports.createOTP = exports.updateUser = exports.deleteUser = exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.getAllUsers = void 0;
+exports.login = exports.generateJWTToken = exports.verifyOTP = exports.createOTP = exports.updateUser = exports.deleteUser = exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.getAllForms = exports.getAllUsers = void 0;
 const responseUtils_1 = require("../utils/responseUtils");
 const userModel_1 = __importDefault(require("../models/userModel"));
+const formModel_1 = __importDefault(require("../models/formModel"));
 const console_1 = require("console");
 const exceljs_1 = __importDefault(require("exceljs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -46,6 +47,18 @@ const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.getAllUsers = getAllUsers;
+const getAllForms = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const allFroms = yield formModel_1.default.find();
+        (0, console_1.log)(allFroms);
+        res.status(200).json({ isSuccessful: true, data: allFroms, });
+    }
+    catch (error) {
+        (0, console_1.log)(error);
+        res.status(500).json({ isSuccessful: false, message: 'Failed to fetch forms', error: error.message });
+    }
+});
+exports.getAllForms = getAllForms;
 const addUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // קח את המידע מהבקשה
