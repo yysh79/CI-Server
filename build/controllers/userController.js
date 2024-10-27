@@ -286,7 +286,11 @@ const generateJWTToken = (user) => {
         email: user.email,
         role: user.role,
     };
-    return jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1h' });
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error('JWT_SECRET is not defined');
+    }
+    return jsonwebtoken_1.default.sign(payload, secret, { expiresIn: '1h' });
 };
 exports.generateJWTToken = generateJWTToken;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -297,14 +301,12 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     try {
         const user = yield userModel_1.default.findOne({ email }).exec();
-        console.log("Retrieved User Object:", user);
         if (!user) {
             res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'משתמש לא נמצא !'));
             return;
         }
         const hashedPasswordFromDB = user.password;
         const bcryptResult = yield bcrypt_1.default.compare(password, hashedPasswordFromDB);
-        console.log("Bcrypt comparison result:", bcryptResult); // Log the result of bcrypt comparison
         if (!bcryptResult) {
             res.status(401).json((0, responseUtils_1.createServerResponse)(false, null, 'סיסמא לא תואמת !'));
             return;
