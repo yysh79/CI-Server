@@ -24,8 +24,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.login = exports.generateJWTToken = exports.verifyOTP = exports.createOTP = exports.updateUser = exports.deleteUser = exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.myLogInWithGoogle = exports.getAllUsers = void 0;
+exports.login = exports.generateJWTToken = exports.verifyOTP = exports.createOTP = exports.updateUser = exports.deleteUser = exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.getAllForms = exports.getAllUsers = void 0;
 const responseUtils_1 = require("../utils/responseUtils");
 const userModel_1 = __importDefault(require("../models/userModel"));
+const formModel_1 = __importDefault(require("../models/formModel"));
 const console_1 = require("console");
 const exceljs_1 = __importDefault(require("exceljs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -36,6 +38,10 @@ const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
         const users = yield userModel_1.default.find();
         (0, console_1.log)(users);
         res.status(200).json((0, responseUtils_1.createServerResponse)(true, users, " match users"));
+        res.status(200).json({
+            isSuccessful: true,
+            data: users,
+        });
     }
     catch (error) {
         (0, console_1.log)(error);
@@ -59,6 +65,18 @@ const myLogInWithGoogle = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.myLogInWithGoogle = myLogInWithGoogle;
+const getAllForms = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const allFroms = yield formModel_1.default.find();
+        (0, console_1.log)(allFroms);
+        res.status(200).json({ isSuccessful: true, data: allFroms, });
+    }
+    catch (error) {
+        (0, console_1.log)(error);
+        res.status(500).json({ isSuccessful: false, message: 'Failed to fetch forms', error: error.message });
+    }
+});
+exports.getAllForms = getAllForms;
 const addUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // קח את המידע מהבקשה
@@ -88,22 +106,42 @@ const exportToExcelAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, f
         const users = yield userModel_1.default.find().lean();
         const workbook = new exceljs_1.default.Workbook();
         const worksheet = workbook.addWorksheet('Users');
+        worksheet.views = [{ rightToLeft: true }];
+        const headerStyle = {
+            font: {
+                bold: true,
+                size: 12,
+            },
+            alignment: {
+                horizontal: 'center',
+                vertical: 'middle',
+            },
+        };
         worksheet.columns = [
-            { header: 'שם פרטי', key: 'Fname', width: 30 },
-            { header: 'שם משפחה', key: 'Lname', width: 30 },
-            { header: 'מספר טלפון', key: 'phone', width: 30 },
-            { header: 'מייל', key: 'email', width: 30 },
-            { header: 'תפקיד', key: 'role', width: 30 },
-            { header: 'סיסמא', key: 'password', width: 30 },
+            { header: 'שם פרטי', key: 'Fname', width: 20, style: headerStyle },
+            { header: 'שם משפחה', key: 'Lname', width: 20, style: headerStyle },
+            { header: 'מספר טלפון', key: 'phone', width: 25, style: headerStyle },
+            { header: 'מייל', key: 'email', width: 30, style: headerStyle },
+            { header: 'תפקיד', key: 'role', width: 15, style: headerStyle },
+            { header: 'סיסמא', key: 'password', width: 80, style: headerStyle },
         ];
         users.forEach(user => {
-            worksheet.addRow({
-                Fname: user.firstName, // הוספת שורה עבור כל משתמש
+            const row = worksheet.addRow({
+                Fname: user.firstName,
                 Lname: user.lastName,
                 phone: user.phone,
                 email: user.email,
                 password: user.password,
                 role: user.role,
+            });
+            row.eachCell((cell) => {
+                cell.style.alignment = {
+                    horizontal: 'center',
+                    vertical: 'middle',
+                };
+                cell.style.font = {
+                    bold: false,
+                };
             });
         });
         res.setHeader('Content-Disposition', 'attachment; filename="users.xlsx"');
@@ -121,13 +159,14 @@ const searchUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const search = req.params.searchName;
     if (!search) {
         res.status(400).json({ message: 'Search query is required' });
+        return;
     }
     try {
         const users = yield userModel_1.default.find({
             $or: [
-                { firstName: new RegExp(search, 'i') },
-                { lastName: new RegExp(search, 'i') },
-                { email: new RegExp(search, 'i') },
+                { firstName: new RegExp(`^${search}`, 'i') },
+                { lastName: new RegExp(`^${search}`, 'i') },
+                { email: new RegExp(`^${search}`, 'i') },
             ]
         });
         res.status(200).json({
@@ -256,6 +295,7 @@ const verifyOTP = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(200).json((0, responseUtils_1.createServerResponse)(true, null, 'OTP verified successfully!', 'The OTP has been successfully verified.'));
 });
 exports.verifyOTP = verifyOTP;
+;
 const generateJWTToken = (user) => {
     const payload = {
         firstName: user.firstName,
@@ -264,7 +304,11 @@ const generateJWTToken = (user) => {
         email: user.email,
         role: user.role,
     };
-    return jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1h' });
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error('JWT_SECRET is not defined');
+    }
+    return jsonwebtoken_1.default.sign(payload, secret, { expiresIn: '1h' });
 };
 exports.generateJWTToken = generateJWTToken;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -275,14 +319,12 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     try {
         const user = yield userModel_1.default.findOne({ email }).exec();
-        console.log("Retrieved User Object:", user);
         if (!user) {
             res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'משתמש לא נמצא !'));
             return;
         }
         const hashedPasswordFromDB = user.password;
         const bcryptResult = yield bcrypt_1.default.compare(password, hashedPasswordFromDB);
-        console.log("Bcrypt comparison result:", bcryptResult); // Log the result of bcrypt comparison
         if (!bcryptResult) {
             res.status(401).json((0, responseUtils_1.createServerResponse)(false, null, 'סיסמא לא תואמת !'));
             return;

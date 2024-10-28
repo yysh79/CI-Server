@@ -2,8 +2,9 @@
 import { createServerResponse } from '../utils/responseUtils';
 import { Request, Response } from 'express';
 import User from '../models/userModel'
+import Form from '../models/formModel';
 import { log } from 'console';
-import ExcelJS from 'exceljs';
+import ExcelJS, { Cell }  from 'exceljs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcrypt'
@@ -21,6 +22,16 @@ export const getAllUsers = async (_req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to fetch users', error:error });
     }
 };
+export const getAllForms = async (_req: Request, res: Response) => {
+    try {
+        const allFroms = await Form.find();
+        log(allFroms)
+        res.status(200).json({  isSuccessful: true, data: allFroms,});
+    } catch (error:any) {
+        log(error);      
+        res.status(500).json({isSuccessful: false, message: 'Failed to fetch forms', error: error.message });
+    }
+}
 
 
 export const myLogInWithGoogle = async (req: Request, res: Response) => {
@@ -72,26 +83,51 @@ export const exportToExcelAllUsers = async (_req: Request, res: Response): Promi
 
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Users');
+        worksheet.views = [{ rightToLeft: true }];
+
+        
+        const headerStyle = {
+            font: {
+                bold: true,
+                size: 12, 
+            },
+            alignment: {
+                horizontal: 'center' as const,
+                vertical: 'middle' as const,
+            },
+        };
 
 
          worksheet.columns = [
-            { header: 'שם פרטי', key: 'Fname', width: 30 },
-            { header: 'שם משפחה', key: 'Lname', width: 30 },
-            { header: 'מספר טלפון', key: 'phone', width: 30 },
-            { header: 'מייל', key: 'email', width: 30 },
-            { header: 'תפקיד', key: 'role', width: 30 },
-            { header: 'סיסמא', key: 'password', width: 30 },
+            { header: 'שם פרטי', key: 'Fname', width: 20, style: headerStyle },
+            { header: 'שם משפחה', key: 'Lname', width: 20, style: headerStyle },
+            { header: 'מספר טלפון', key: 'phone', width: 25, style: headerStyle },
+            { header: 'מייל', key: 'email', width: 30, style: headerStyle },
+            { header: 'תפקיד', key: 'role', width: 15, style: headerStyle },
+            { header: 'סיסמא', key: 'password', width: 80, style: headerStyle },
         ];
+
         users.forEach(user => {
-            worksheet.addRow({
-                Fname: user.firstName, // הוספת שורה עבור כל משתמש
+           const row= worksheet.addRow({ // הוספת שורה עבור כל משתמש
+                Fname: user.firstName, 
                 Lname: user.lastName,
                 phone: user.phone,
                 email: user.email,
                 password: user.password, 
                 role: user.role,
             });
+
+            row.eachCell((cell:Cell) => {
+                cell.style.alignment = {
+                    horizontal: 'center' as const, 
+                    vertical: 'middle' as const,
+                };
+                cell.style.font = { 
+                    bold: false,
+                };
+            });
         });
+
         res.setHeader('Content-Disposition', 'attachment; filename="users.xlsx"');
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
@@ -103,21 +139,23 @@ export const exportToExcelAllUsers = async (_req: Request, res: Response): Promi
     console.error(error); // Log error
     res.status(500).json(createServerResponse(false, null,'Failed to export users to Excel', 'An error occurred while attempting to export users to Excel',error instanceof Error ? error.message : String(error)));
     }
-}
+};
 
 export const searchUser = async (req: Request, res: Response): Promise<void> => {
     const search = req.params.searchName as string;
 
+
     if (!search) {
         res.status(400).json({ message: 'Search query is required' });
+        return;
     }
 
     try {
         const users = await User.find({
             $or: [
-                { firstName: new RegExp(search, 'i') },
-                { lastName: new RegExp(search, 'i') },
-                { email: new RegExp(search, 'i') },
+                { firstName: new RegExp(`^${search}`, 'i') },
+                { lastName: new RegExp(`^${search}`, 'i') },
+                { email: new RegExp(`^${search}`, 'i') }, 
             ]
         });
         res.status(200).json({
@@ -130,7 +168,7 @@ export const searchUser = async (req: Request, res: Response): Promise<void> => 
         res.status(500).json({ message: 'Internal server error' });
     }
 
-}
+};
 
 export const deleteUser = async (req: Request, res: Response) => {
     try {
@@ -147,7 +185,7 @@ export const deleteUser = async (req: Request, res: Response) => {
         console.error(error); // Log error
      res.status(500).json(createServerResponse( false,null, 'Internal Server Error', 'An error occurred while attempting to delete the user', error instanceof Error ? error.message : String(error)));
     }
-}
+};
 
 export const updateUser = async (req: Request, res: Response) => {
     const userId = req.params.id; // קבלת ה-ID מהפרמטרים של הבקשה
@@ -262,7 +300,7 @@ interface User {
     email: string;
     role: string;
     comparePassword: (password: string) => Promise<boolean>;
-}
+};
 
 export const generateJWTToken = (user: User): string => {
     const payload = {
@@ -270,42 +308,27 @@ export const generateJWTToken = (user: User): string => {
         lastName:user.lastName,
         phone:user.phone,
         email:user.email,
-        role:user.role,
-    };
-
-    return jwt.sign(payload, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1h' });
-};
-
+        role:user.role,};
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT_SECRET is not defined');}
+            return jwt.sign(payload, secret, { expiresIn: '1h' });}
 export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body; 
-
     if (!email || !password) {
      res.status(400).json(createServerResponse(false, null, 'הכנס מייל וסיסמא !'));
      return;
-    }
-
-    try {
-        const user = await User.findOne({ email }).exec(); 
-        console.log("Retrieved User Object:", user); 
-
+    }try {
+        const user = await User.findOne({ email }).exec();  
         if (!user) { 
              res.status(404).json(createServerResponse(false, null, 'משתמש לא נמצא !'));
-             return;
-        }
-
-        
+             return;}
         const hashedPasswordFromDB = user.password;
         const bcryptResult = await bcrypt.compare(password, hashedPasswordFromDB);
-        console.log("Bcrypt comparison result:", bcryptResult); // Log the result of bcrypt comparison
-
         if (!bcryptResult) { 
              res.status(401).json(createServerResponse(false, null, 'סיסמא לא תואמת !'));
-             return;
-        }
-
-       
+             return;}
         const token = generateJWTToken(user); 
-
         res.status(200).json(createServerResponse(true, { user, token }, ' התחברות בהצלחה !'));
     } catch (error) {
         console.error(error); 
