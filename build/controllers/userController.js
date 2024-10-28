@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = exports.generateJWTToken = exports.verifyOTP = exports.createOTP = exports.updateUser = exports.deleteUser = exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.getAllUsers = void 0;
+exports.login = exports.generateJWTToken = exports.verifyOTP = exports.createOTP = exports.updateUser = exports.deleteUser = exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.myLogInWithGoogle = exports.getAllUsers = void 0;
 const responseUtils_1 = require("../utils/responseUtils");
 const userModel_1 = __importDefault(require("../models/userModel"));
 const console_1 = require("console");
@@ -35,7 +35,7 @@ const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const users = yield userModel_1.default.find();
         (0, console_1.log)(users);
-        res.status(200).json(users);
+        res.status(200).json((0, responseUtils_1.createServerResponse)(true, users, " match users"));
     }
     catch (error) {
         (0, console_1.log)(error);
@@ -43,6 +43,22 @@ const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.getAllUsers = getAllUsers;
+const myLogInWithGoogle = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const checkuser = yield userModel_1.default.findOne({ email: req.body.email });
+        if (!checkuser) {
+            console.log(checkuser + " was not found");
+            res.status(404).json((0, responseUtils_1.createServerResponse)(false, ' email not found'));
+            return;
+        }
+        res.status(200).json((0, responseUtils_1.createServerResponse)(true, checkuser, ' email found'));
+        console.log(checkuser + " email found");
+    }
+    catch (error) {
+        console.log("try did not work");
+    }
+});
+exports.myLogInWithGoogle = myLogInWithGoogle;
 const addUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // קח את המידע מהבקשה

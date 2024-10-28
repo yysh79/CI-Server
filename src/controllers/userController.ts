@@ -7,16 +7,38 @@ import ExcelJS from 'exceljs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcrypt'
+import { MongoClient } from 'mongodb';
+import { connectDatabase } from '../config/mongoDbConect';
 
 
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
         const users = await User.find();
         log(users);      
-        res.status(200).json(users);
+        res.status(200).json(createServerResponse(true, users, " match users"));
     } catch (error) {
         log(error);      
         res.status(500).json({ message: 'Failed to fetch users', error:error });
+    }
+};
+
+
+export const myLogInWithGoogle = async (req: Request, res: Response) => {
+    try {
+        const checkuser = await User.findOne({email: req.body.email});
+        
+        if (!checkuser) {
+        console.log(checkuser + " was not found");
+        res.status(404).json(createServerResponse(false,  ' email not found'));
+        return;    
+        }
+        res.status(200).json(createServerResponse(true, checkuser, ' email found'));
+        console.log(checkuser + " email found");
+
+    } catch (error: unknown) {
+       
+       console.log("try did not work");
+       
     }
 };
 
@@ -289,6 +311,7 @@ export const login = async (req: Request, res: Response) => {
         console.error(error); 
         res.status(500).json(createServerResponse(false, null, 'Internal server error', null, error instanceof Error ? error.message : String(error)));
     }
+     
 };
 
 

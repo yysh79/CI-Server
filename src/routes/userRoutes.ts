@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { getAllUsers, addUsers, exportToExcelAllUsers ,updateUser, searchUser ,deleteUser,createOTP,verifyOTP, login} from '../controllers/userController';
+import { getAllUsers, addUsers, exportToExcelAllUsers ,updateUser, searchUser ,deleteUser,createOTP,verifyOTP, login, myLogInWithGoogle} from '../controllers/userController';
 
 const userRoutes = Router();
 
@@ -35,6 +35,7 @@ userRoutes.get('/getAllUsers', getAllUsers);
  */
 userRoutes.post('/login',login)
 userRoutes.post('/addUsers', addUsers);
+userRoutes.post('/myLogInWithGoogle', myLogInWithGoogle);
 userRoutes.get('/exportToExcelAllUsers', exportToExcelAllUsers);
 userRoutes.get('/search/:searchName', searchUser);
 userRoutes.delete('/deleteUser/:id', deleteUser);
