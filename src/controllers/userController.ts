@@ -8,16 +8,15 @@ import ExcelJS, { Cell }  from 'exceljs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcrypt'
+import { MongoClient } from 'mongodb';
+import { connectDatabase } from '../config/mongoDbConect';
 import FilledForm from '../models/FilledForm';
 
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
         const users = await User.find();
         log(users);      
-        res.status(200).json({
-            isSuccessful: true,
-            data: users,
-        });
+        res.status(200).json(createServerResponse(true, users, " match users"));
     } catch (error) {
         log(error);      
         res.status(500).json({ message: 'Failed to fetch users', error:error });
@@ -34,7 +33,27 @@ export const getAllForms = async (_req: Request, res: Response) => {
     }
 }
 
-export const addUsers = async (req: Request, res: Response): Promise<void> => {
+
+export const myLogInWithGoogle = async (req: Request, res: Response) => {
+    try {
+        const checkuser = await User.findOne({email: req.body.email});
+        
+        if (!checkuser) {
+        console.log(checkuser + " was not found");
+        res.status(404).json(createServerResponse(false,  ' email not found'));
+        return;    
+        }
+        res.status(200).json(createServerResponse(true, checkuser, ' email found'));
+        console.log(checkuser + " email found");
+
+    } catch (error: unknown) {
+       
+       console.log("try did not work");
+       
+    }
+};
+
+export const addUsers = async (req: Request, res: Response) => {
     try {
         // קח את המידע מהבקשה
         const userData = req.body;
@@ -332,48 +351,36 @@ export const generateJWTToken = (user: User): string => {
         lastName:user.lastName,
         phone:user.phone,
         email:user.email,
-        role:user.role,
-    };
-
-    return jwt.sign(payload, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1h' });
-};
-
+        role:user.role,};
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT_SECRET is not defined');}
+            return jwt.sign(payload, secret, { expiresIn: '1h' });}
 export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body; 
-
     if (!email || !password) {
      res.status(400).json(createServerResponse(false, null, 'הכנס מייל וסיסמא !'));
      return;
-    }
-
-    try {
-        const user = await User.findOne({ email }).exec(); 
-        console.log("Retrieved User Object:", user); 
-
+    }try {
+        const user = await User.findOne({ email }).exec();  
         if (!user) { 
              res.status(404).json(createServerResponse(false, null, 'משתמש לא נמצא !'));
-             return;
-        }
-
-        
+             return;}
         const hashedPasswordFromDB = user.password;
         const bcryptResult = await bcrypt.compare(password, hashedPasswordFromDB);
-        console.log("Bcrypt comparison result:", bcryptResult); // Log the result of bcrypt comparison
-
         if (!bcryptResult) { 
              res.status(401).json(createServerResponse(false, null, 'סיסמא לא תואמת !'));
-             return;
-        }
-
-       
+             return;}
         const token = generateJWTToken(user); 
-
         res.status(200).json(createServerResponse(true, { user, token }, ' התחברות בהצלחה !'));
     } catch (error) {
         console.error(error); 
         res.status(500).json(createServerResponse(false, null, 'Internal server error', null, error instanceof Error ? error.message : String(error)));
     }
+     
 };
+
+
 
 export const addFilledForm = async (req: Request, res: Response): Promise<void> => {
     try {

@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addFilledForm = exports.login = exports.generateJWTToken = exports.verifyOTP = exports.createOTP = exports.updateForm = exports.updateUser = exports.deleteUser = exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.getAllForms = exports.getAllUsers = void 0;
+exports.addFilledForm = exports.login = exports.generateJWTToken = exports.verifyOTP = exports.createOTP = exports.updateForm = exports.updateUser = exports.deleteUser = exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.myLogInWithGoogle = exports.getAllForms = exports.getAllUsers = void 0;
 const responseUtils_1 = require("../utils/responseUtils");
 const userModel_1 = __importDefault(require("../models/userModel"));
 const formModel_1 = __importDefault(require("../models/formModel"));
@@ -37,10 +37,7 @@ const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const users = yield userModel_1.default.find();
         (0, console_1.log)(users);
-        res.status(200).json({
-            isSuccessful: true,
-            data: users,
-        });
+        res.status(200).json((0, responseUtils_1.createServerResponse)(true, users, " match users"));
     }
     catch (error) {
         (0, console_1.log)(error);
@@ -60,6 +57,22 @@ const getAllForms = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.getAllForms = getAllForms;
+const myLogInWithGoogle = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const checkuser = yield userModel_1.default.findOne({ email: req.body.email });
+        if (!checkuser) {
+            console.log(checkuser + " was not found");
+            res.status(404).json((0, responseUtils_1.createServerResponse)(false, ' email not found'));
+            return;
+        }
+        res.status(200).json((0, responseUtils_1.createServerResponse)(true, checkuser, ' email found'));
+        console.log(checkuser + " email found");
+    }
+    catch (error) {
+        console.log("try did not work");
+    }
+});
+exports.myLogInWithGoogle = myLogInWithGoogle;
 const addUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // קח את המידע מהבקשה
@@ -326,7 +339,11 @@ const generateJWTToken = (user) => {
         email: user.email,
         role: user.role,
     };
-    return jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1h' });
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error('JWT_SECRET is not defined');
+    }
+    return jsonwebtoken_1.default.sign(payload, secret, { expiresIn: '1h' });
 };
 exports.generateJWTToken = generateJWTToken;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -337,14 +354,12 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     try {
         const user = yield userModel_1.default.findOne({ email }).exec();
-        console.log("Retrieved User Object:", user);
         if (!user) {
             res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'משתמש לא נמצא !'));
             return;
         }
         const hashedPasswordFromDB = user.password;
         const bcryptResult = yield bcrypt_1.default.compare(password, hashedPasswordFromDB);
-        console.log("Bcrypt comparison result:", bcryptResult); // Log the result of bcrypt comparison
         if (!bcryptResult) {
             res.status(401).json((0, responseUtils_1.createServerResponse)(false, null, 'סיסמא לא תואמת !'));
             return;
