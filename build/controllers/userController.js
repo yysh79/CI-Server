@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = exports.generateJWTToken = exports.verifyOTP = exports.createOTP = exports.updateUser = exports.deleteUser = exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.getAllForms = exports.getAllUsers = void 0;
+exports.addFilledForm = exports.login = exports.generateJWTToken = exports.verifyOTP = exports.createOTP = exports.updateForm = exports.updateUser = exports.deleteUser = exports.searchUser = exports.exportToExcelAllUsers = exports.addUsers = exports.getAllForms = exports.getAllUsers = void 0;
 const responseUtils_1 = require("../utils/responseUtils");
 const userModel_1 = __importDefault(require("../models/userModel"));
 const formModel_1 = __importDefault(require("../models/formModel"));
@@ -32,6 +32,7 @@ const exceljs_1 = __importDefault(require("exceljs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
+const FilledForm_1 = __importDefault(require("../models/FilledForm"));
 const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const users = yield userModel_1.default.find();
@@ -207,6 +208,45 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.updateUser = updateUser;
+const updateForm = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Entering updateForm function");
+    const formId = req.params.id; // מזהה הטופס
+    const itemId = req.body.itemId; // מזהה השדה לעדכון
+    const updatedData = req.body.updatedFieldData; // הנתונים החדשים לעדכון
+    if (!updatedData || Object.keys(updatedData).length === 0) {
+        res.status(400).json((0, responseUtils_1.createServerResponse)(false, null, 'No data provided for update'));
+        return;
+    }
+    try {
+        const form = yield formModel_1.default.findById(formId);
+        console.log("Form before update:", form);
+        if (!form) {
+            res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'Form not found'));
+            return;
+        }
+        // מציאת השדה בתוך ה-fields לפי ה-ID שלו
+        const item = form.fields.find((field) => field._id.toString() === itemId);
+        if (!item) {
+            res.status(404).json((0, responseUtils_1.createServerResponse)(false, null, 'Field not found in the form'));
+            return;
+        }
+        // עדכון השדות הרלוונטיים באובייקט שנמצא
+        Object.assign(item, updatedData);
+        // שמירת השינויים
+        const updatedForm = yield form.save();
+        res.status(200).json((0, responseUtils_1.createServerResponse)(true, updatedForm, 'Field updated successfully'));
+    }
+    catch (error) {
+        console.error(error);
+        if (error instanceof Error) {
+            res.status(500).json((0, responseUtils_1.createServerResponse)(false, null, 'Failed to update form', null, error.message));
+        }
+        else {
+            res.status(500).json((0, responseUtils_1.createServerResponse)(false, null, 'Failed to update form', null, 'An unknown error occurred'));
+        }
+    }
+});
+exports.updateForm = updateForm;
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); // יוצר מספר בין 100000 ל-999999
 };
@@ -318,3 +358,28 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.login = login;
+const addFilledForm = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // קח את המידע מהבקשה
+        const filledFormData = req.body;
+        // צור טופס שמולא חדש
+        const newFilledForm = new FilledForm_1.default(filledFormData);
+        // שמור את הטופס במונגו
+        const savedFilledForm = yield newFilledForm.save();
+        (0, console_1.log)(savedFilledForm);
+        res.status(201).json((0, responseUtils_1.createServerResponse)(true, savedFilledForm, 'Filled form added successfully'));
+    }
+    catch (error) {
+        (0, console_1.log)(error);
+        // בדוק אם השגיאה היא אובייקט מסוג Error
+        if (error instanceof Error) {
+            // שלח תגובה עם שגיאה
+            res.status(500).json((0, responseUtils_1.createServerResponse)(false, null, 'Failed to add filled form', null, error.message));
+        }
+        else {
+            // במידה והשגיאה אינה מסוג Error
+            res.status(500).json((0, responseUtils_1.createServerResponse)(false, null, 'Failed to add filled form', null, 'An unknown error occurred'));
+        }
+    }
+});
+exports.addFilledForm = addFilledForm;
