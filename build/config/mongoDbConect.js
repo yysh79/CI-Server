@@ -18,6 +18,9 @@ require("dotenv/config");
 //חיבור למונגו די בי
 const connectDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        if (!process.env.MONGO_URI) {
+            throw new Error('MONGO_URI is not defined in environment variables');
+        }
         yield mongoose_1.default.connect(process.env.MONGO_URI);
         console.log('MongoDB connected');
     }

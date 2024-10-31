@@ -9,16 +9,15 @@ interface Field {
     required?: boolean;
     value?: any;
 }
-
 // הגדרת הסכמה לטופס
 interface FormDocument extends Document {
+    
     title: string;
     description?: string;
-    city?: string;                       // שדה  עבור שם העיר
+    city: string;                       // שדה  עבור שם העיר
     fields: Field[];
     createdAt: Date;
 }
-
 // הגדרת הסכמות
 const fieldSchema: Schema = new Schema({
     label: { type: String, required: true }, // תווית השדה
@@ -28,7 +27,6 @@ const fieldSchema: Schema = new Schema({
     required: { type: Boolean, default: false },  // האם השדה חובה
     value: { type: Schema.Types.Mixed }      // הערך של השדה (תלוי בסוג השדה)
 });
-
 const formSchema: Schema<FormDocument> = new Schema({
     title: { type: String, required: true },    // שם הטופס
     description: { type: String },                 // תיאור הטופס
@@ -36,7 +34,6 @@ const formSchema: Schema<FormDocument> = new Schema({
     fields: [fieldSchema],                       // רשימה של שדות (באמצעות ה-shema של שדות)
     createdAt: { type: Date, default: Date.now }   // זמן יצירת הטופס
 });
-
 // יצירת המודל
 const Form = mongoose.model<FormDocument>('Form', formSchema);
 export default Form;

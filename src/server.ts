@@ -18,6 +18,7 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use('/', indexRout);
+app.use(express.static('public'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
