@@ -8,17 +8,15 @@ import ExcelJS, { Cell } from 'exceljs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcrypt'
-
-
+import { MongoClient } from 'mongodb';
+import { connectDatabase } from '../config/mongoDbConect';
+import FilledForm from '../models/FilledForm';
 
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
         const users = await User.find();
-        log(users);
-        res.status(200).json({
-            isSuccessful: true,
-            data: users,
-        });
+        log(users);      
+        res.status(200).json(createServerResponse(true, users, " match users"));
     } catch (error) {
         log(error);
         res.status(500).json({ message: 'Failed to fetch users', error: error });
@@ -35,7 +33,27 @@ export const getAllForms = async (_req: Request, res: Response) => {
     }
 }
 
-export const addUsers = async (req: Request, res: Response): Promise<void> => {
+
+export const myLogInWithGoogle = async (req: Request, res: Response) => {
+    try {
+        const checkuser = await User.findOne({email: req.body.email});
+        
+        if (!checkuser) {
+        console.log(checkuser + " was not found");
+        res.status(404).json(createServerResponse(false,  ' email not found'));
+        return;    
+        }
+        res.status(200).json(createServerResponse(true, checkuser, ' email found'));
+        console.log(checkuser + " email found");
+
+    } catch (error: unknown) {
+       
+       console.log("try did not work");
+       
+    }
+};
+
+export const addUsers = async (req: Request, res: Response) => {
     try {
         // קח את המידע מהבקשה
         const userData = req.body;
@@ -159,6 +177,49 @@ export const updateUser = async (req: Request, res: Response) => {
         }
     }
 };
+export const updateForm = async (req: Request, res: Response) => {
+    console.log("Entering updateForm function");
+    const formId = req.params.id; // מזהה הטופס
+    const itemId = req.body.itemId; // מזהה השדה לעדכון
+    const updatedData = req.body.updatedFieldData; // הנתונים החדשים לעדכון
+    if (!updatedData || Object.keys(updatedData).length === 0) {
+        res.status(400).json(createServerResponse(false, null, 'No data provided for update'));
+        return;
+    }
+
+    try {
+        const form = await Form.findById(formId);
+        console.log("Form before update:", form);
+
+        if (!form) {
+            res.status(404).json(createServerResponse(false, null, 'Form not found'));
+            return;
+        }
+
+        // מציאת השדה בתוך ה-fields לפי ה-ID שלו
+        const item = form.fields.find((field: any) => field._id.toString() === itemId);
+
+        if (!item) {
+            res.status(404).json(createServerResponse(false, null, 'Field not found in the form'));
+            return;
+        }
+
+        // עדכון השדות הרלוונטיים באובייקט שנמצא
+        Object.assign(item, updatedData);
+
+        // שמירת השינויים
+        const updatedForm = await form.save();
+        res.status(200).json(createServerResponse(true, updatedForm, 'Field updated successfully'));
+    } catch (error: unknown) {
+        console.error(error);
+        if (error instanceof Error) {
+            res.status(500).json(createServerResponse(false, null, 'Failed to update form', null, error.message));
+        } else {
+            res.status(500).json(createServerResponse(false, null, 'Failed to update form', null, 'An unknown error occurred'));
+        }
+    }
+};
+
 
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); // יוצר מספר בין 100000 ל-999999
@@ -267,9 +328,33 @@ export const login = async (req: Request, res: Response) => {
         const token = generateJWTToken(user);
         res.status(200).json(createServerResponse(true, { user, token }, ' התחברות בהצלחה !'));
     } catch (error) {
-        console.error(error);
-        res.status(500).json(createServerResponse(false, null, 'Internal server error', null,
-            error instanceof Error ? error.message : String(error)));
+        console.error(error); 
+        res.status(500).json(createServerResponse(false, null, 'Internal server error', null, error instanceof Error ? error.message : String(error)));
     }
+     
 };
 
+
+
+export const addFilledForm = async (req: Request, res: Response): Promise<void> => {
+    try {
+        // קח את המידע מהבקשה
+        const filledFormData = req.body;
+        // צור טופס שמולא חדש
+        const newFilledForm = new FilledForm(filledFormData);
+        // שמור את הטופס במונגו
+        const savedFilledForm = await newFilledForm.save();
+        log(savedFilledForm);
+        res.status(201).json(createServerResponse(true, savedFilledForm, 'Filled form added successfully'));
+    } catch (error: unknown) { 
+        log(error);
+        // בדוק אם השגיאה היא אובייקט מסוג Error
+        if (error instanceof Error) {
+            // שלח תגובה עם שגיאה
+            res.status(500).json(createServerResponse(false, null, 'Failed to add filled form', null, error.message));
+        } else {
+            // במידה והשגיאה אינה מסוג Error
+            res.status(500).json(createServerResponse(false, null, 'Failed to add filled form', null, 'An unknown error occurred'));
+        }
+    }
+};
