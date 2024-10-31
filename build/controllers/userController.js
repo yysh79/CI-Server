@@ -37,10 +37,7 @@ const getAllUsers = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const users = yield userModel_1.default.find();
         (0, console_1.log)(users);
-        res.status(200).json({
-            isSuccessful: true,
-            data: users,
-        });
+        res.status(200).json((0, responseUtils_1.createServerResponse)(true, users, " match users"));
     }
     catch (error) {
         (0, console_1.log)(error);
