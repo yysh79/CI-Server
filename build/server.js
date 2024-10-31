@@ -15,6 +15,7 @@ app.use((0, cors_1.default)());
 app.use('/swagger', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_output_json_1.default));
 app.use(express_1.default.json());
 app.use('/', indexRout_js_1.default);
+app.use(express_1.default.static('public'));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

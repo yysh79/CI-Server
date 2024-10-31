@@ -4,33 +4,34 @@ import { Request, Response } from 'express';
 import User from '../models/userModel'
 import Form from '../models/formModel';
 import { log } from 'console';
-import ExcelJS, { Cell }  from 'exceljs';
+import ExcelJS, { Cell } from 'exceljs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcrypt'
 
 
+
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
         const users = await User.find();
-        log(users);      
+        log(users);
         res.status(200).json({
             isSuccessful: true,
             data: users,
         });
     } catch (error) {
-        log(error);      
-        res.status(500).json({ message: 'Failed to fetch users', error:error });
+        log(error);
+        res.status(500).json({ message: 'Failed to fetch users', error: error });
     }
 };
 export const getAllForms = async (_req: Request, res: Response) => {
     try {
         const allFroms = await Form.find();
         log(allFroms)
-        res.status(200).json({  isSuccessful: true, data: allFroms,});
-    } catch (error:any) {
-        log(error);      
-        res.status(500).json({isSuccessful: false, message: 'Failed to fetch forms', error: error.message });
+        res.status(200).json({ isSuccessful: true, data: allFroms, });
+    } catch (error: any) {
+        log(error);
+        res.status(500).json({ isSuccessful: false, message: 'Failed to fetch forms', error: error.message });
     }
 }
 
@@ -44,13 +45,13 @@ export const addUsers = async (req: Request, res: Response): Promise<void> => {
         log(savedUser);
         res.status(201).json(createServerResponse(true, savedUser, 'User added successfully'));
 
-    } catch (error: unknown) { 
+    } catch (error: unknown) {
         log(error);
         // בדוק אם השגיאה היא אובייקט מסוג Error
         if (error instanceof Error) {
             // שלח תגובה עם שגיאה
             res.status(500).json(createServerResponse(false, null, 'Failed to add user', null, error.message));
-            
+
         } else {
             // במידה והשגיאה אינה מסוג Error
             res.status(500).json(createServerResponse(false, null, 'Failed to add user', null, 'An unknown error occurred'));
@@ -59,68 +60,32 @@ export const addUsers = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const exportToExcelAllUsers = async (_req: Request, res: Response): Promise<void> => {
-    try {
-        const users = await User.find().lean();
-
+    try { const users = await User.find().lean();
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Users');
         worksheet.views = [{ rightToLeft: true }];
-
-        
-        const headerStyle = {
-            font: {
-                bold: true,
-                size: 12, 
-            },
-            alignment: {
-                horizontal: 'center' as const,
-                vertical: 'middle' as const,
-            },
-        };
-
-
-         worksheet.columns = [
+        const headerStyle = {font: { bold: true, size: 12, }, alignment: { horizontal: 'center' as const, vertical: 'middle' as const, }};
+        worksheet.columns = [
             { header: 'שם פרטי', key: 'Fname', width: 20, style: headerStyle },
             { header: 'שם משפחה', key: 'Lname', width: 20, style: headerStyle },
             { header: 'מספר טלפון', key: 'phone', width: 25, style: headerStyle },
             { header: 'מייל', key: 'email', width: 30, style: headerStyle },
             { header: 'תפקיד', key: 'role', width: 15, style: headerStyle },
-            { header: 'סיסמא', key: 'password', width: 80, style: headerStyle },
-        ];
-
-        users.forEach(user => {
-           const row= worksheet.addRow({ // הוספת שורה עבור כל משתמש
-                Fname: user.firstName, 
-                Lname: user.lastName,
-                phone: user.phone,
-                email: user.email,
-                password: user.password, 
-                role: user.role,
-            });
-
-            row.eachCell((cell:Cell) => {
-                cell.style.alignment = {
-                    horizontal: 'center' as const, 
-                    vertical: 'middle' as const,
-                };
-                cell.style.font = { 
-                    bold: false,
-                };
-            });
-        });
-
+            { header: 'סיסמא', key: 'password', width: 80, style: headerStyle },];
+        users.forEach(user => {const row = worksheet.addRow({
+                Fname: user.firstName, Lname: user.lastName, phone: user.phone,
+                email: user.email, password: user.password, role: user.role,});
+            row.eachCell((cell: Cell) => {
+                cell.style.alignment = { horizontal: 'center' as const, vertical: 'middle' as const, };
+                cell.style.font = { bold: false, };});});
         res.setHeader('Content-Disposition', 'attachment; filename="users.xlsx"');
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-
-
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         await workbook.xlsx.write(res);
-
         res.end();
-    } catch (error) {
-    console.error(error); // Log error
-    res.status(500).json(createServerResponse(false, null,'Failed to export users to Excel', 'An error occurred while attempting to export users to Excel',error instanceof Error ? error.message : String(error)));
-    }
-};
+    } catch (error) {console.error(error);
+        res.status(500).json(createServerResponse(false, null, 'היצוא לאקסל נכשל!', 'שגיאה הופיעה',
+      error instanceof Error ? error.message : String(error)));}};
+
 
 export const searchUser = async (req: Request, res: Response): Promise<void> => {
     const search = req.params.searchName as string;
@@ -136,7 +101,7 @@ export const searchUser = async (req: Request, res: Response): Promise<void> => 
             $or: [
                 { firstName: new RegExp(`^${search}`, 'i') },
                 { lastName: new RegExp(`^${search}`, 'i') },
-                { email: new RegExp(`^${search}`, 'i') }, 
+                { email: new RegExp(`^${search}`, 'i') },
             ]
         });
         res.status(200).json({
@@ -153,18 +118,18 @@ export const searchUser = async (req: Request, res: Response): Promise<void> => 
 
 export const deleteUser = async (req: Request, res: Response) => {
     try {
-        const userId = req.params.id; // Get user ID from request parameters
-        const deletedUser = await User.findByIdAndDelete(userId); // Delete user by ID
-
+        const userId = req.params.id; 
+        const deletedUser = await User.findByIdAndDelete(userId); 
         if (!deletedUser) {
-             res.status(404).json(createServerResponse( false,null,'User not found','The user with the provided ID does not exist in the database'));
+            res.status(404).json(createServerResponse(false, null, 'הid של המשתמש לא נמצא!'));
         }
-        else{
-        res.status(200).json(createServerResponse( true, deletedUser, 'User deleted successfully', 'The user was successfully deleted from the database' )); 
+        else {
+            res.status(200).json(createServerResponse(true, deletedUser, 'המשתמש נמחק בהצלחה !'));
         }
     } catch (error) {
-        console.error(error); // Log error
-     res.status(500).json(createServerResponse( false,null, 'Internal Server Error', 'An error occurred while attempting to delete the user', error instanceof Error ? error.message : String(error)));
+        console.error(error); 
+        res.status(500).json(createServerResponse(false, null, 'שגיאה הופיעה!',
+         error instanceof Error ? error.message : String(error)));
     }
 };
 
@@ -173,26 +138,26 @@ export const updateUser = async (req: Request, res: Response) => {
     const updatedData = req.body; // קבלת הנתונים המעודכנים מהבקשה
     try {
         // חפש את המשתמש לפי ה-ID
-        const user = await User.findById(userId);        
+        const user = await User.findById(userId);
         // בדוק אם המשתמש קיים
         if (!user) {
             res.status(404).json(createServerResponse(false, null, 'User not found'));
         }
-        else{           
-        const { email, ...otherUpdates } = updatedData; 
-        Object.assign(user, otherUpdates); 
-        const updatedUser = await user.save();
-        res.status(200).json(createServerResponse(true, updatedUser, 'User updated successfully'));
+        else {
+            const { email, ...otherUpdates } = updatedData;
+            Object.assign(user, otherUpdates);
+            const updatedUser = await user.save();
+            res.status(200).json(createServerResponse(true, updatedUser, 'User updated successfully'));
         }
-    } 
-    catch (error: unknown) { 
+    }
+    catch (error: unknown) {
         log(error);
         if (error instanceof Error) {
             res.status(500).json(createServerResponse(false, null, 'Failed to update user', null, error.message));
         } else {
             res.status(500).json(createServerResponse(false, null, 'Failed to update user', null, 'An unknown error occurred'));
         }
-    }    
+    }
 };
 
 const generateOTP = () => {
@@ -267,8 +232,8 @@ export const verifyOTP = async (req: Request, res: Response) => {
     }
 
     // אם הכל בסדר, ניתן לאשר את המשתמש
-    user.code = null; 
-    user.expiresAt = null; 
+    user.code = null;
+    user.expiresAt = null;
     await user.save();
 
     res.status(200).json(createServerResponse(true, null, 'OTP verified successfully!', 'The OTP has been successfully verified.'));
@@ -284,34 +249,27 @@ interface User {
 };
 
 export const generateJWTToken = (user: User): string => {
-    const payload = {
-        firstName:user.firstName,
-        lastName:user.lastName,
-        phone:user.phone,
-        email:user.email,
-        role:user.role,};
-        const secret = process.env.JWT_SECRET;
-        if (!secret) {
-            throw new Error('JWT_SECRET is not defined');}
-            return jwt.sign(payload, secret, { expiresIn: '1h' });}
+    const payload = { firstName: user.firstName, lastName: user.lastName, phone: user.phone, email: user.email, role: user.role, };
+    const secret = process.env.JWT_SECRET;
+    if (!secret) { throw new Error('JWT_SECRET is not defined'); }
+    return jwt.sign(payload, secret, { expiresIn: '1h' });
+}
 export const login = async (req: Request, res: Response) => {
-    const { email, password } = req.body; 
+    const { email, password } = req.body;
     if (!email || !password) {
-     res.status(400).json(createServerResponse(false, null, 'הכנס מייל וסיסמא !'));
-     return;
-    }try {
-        const user = await User.findOne({ email }).exec();  
-        if (!user) { 
-             res.status(404).json(createServerResponse(false, null, 'משתמש לא נמצא !'));
-             return;}
+        res.status(400).json(createServerResponse(false, null, 'הכנס מייל וסיסמא !')); return;
+    } try {
+        const user = await User.findOne({ email }).exec();
+        if (!user) { res.status(404).json(createServerResponse(false, null, 'משתמש לא נמצא !')); return; }
         const hashedPasswordFromDB = user.password;
         const bcryptResult = await bcrypt.compare(password, hashedPasswordFromDB);
-        if (!bcryptResult) { 
-             res.status(401).json(createServerResponse(false, null, 'סיסמא לא תואמת !'));
-             return;}
-        const token = generateJWTToken(user); 
+        if (!bcryptResult) { res.status(401).json(createServerResponse(false, null, 'סיסמא לא תואמת !')); return; }
+        const token = generateJWTToken(user);
         res.status(200).json(createServerResponse(true, { user, token }, ' התחברות בהצלחה !'));
     } catch (error) {
-        console.error(error); 
-        res.status(500).json(createServerResponse(false, null, 'Internal server error', null, error instanceof Error ? error.message : String(error)));}};
+        console.error(error);
+        res.status(500).json(createServerResponse(false, null, 'Internal server error', null,
+            error instanceof Error ? error.message : String(error)));
+    }
+};
 
